@@ -1,0 +1,174 @@
+<title>Serenz A 922</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #f2efe9;
+    --muted: #9d968c;
+    --gold: #c9a15a;
+    --panel: rgba(18, 19, 22, 0.82);
+    --edge: rgba(255, 255, 255, 0.12);
+  }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #060708;
+    color: var(--ink);
+    font: 14px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  #wrap {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #060708;
+  }
+
+  #stage {
+    position: relative;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    background: #000;
+    touch-action: none;
+    cursor: default;
+  }
+
+  #stage canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #ui { pointer-events: none; }
+
+  /* ---- transport ---- */
+  #bar {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    width: min(760px, calc(100% - 48px));
+    box-sizing: border-box;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    backdrop-filter: blur(14px);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    z-index: 5;
+  }
+
+  #wrap:hover #bar,
+  #bar:focus-within { opacity: 1; }
+
+  button {
+    appearance: none;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  }
+  button:hover { background: rgba(255, 255, 255, 0.08); }
+  button.on { border-color: var(--gold); color: var(--gold); }
+
+  #play {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    flex: none;
+  }
+
+  #time {
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--muted);
+    flex: none;
+    letter-spacing: 0.04em;
+  }
+
+  #scrub {
+    flex: 1;
+    min-width: 60px;
+    appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    cursor: pointer;
+  }
+  #scrub::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+  }
+  #scrub::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+  }
+
+  #hint {
+    position: absolute;
+    left: 50%;
+    bottom: 76px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 6px 14px;
+    z-index: 5;
+  }
+
+  @media (max-width: 560px) {
+    #bar { gap: 9px; padding: 8px 12px; }
+    button { padding: 5px 9px; font-size: 11px; }
+    #time { display: none; }
+  }
+</style>
+
+<div id="wrap">
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <canvas id="ui"></canvas>
+
+    <div id="hint" hidden>Drag to orbit · Shift-drag to pan · Scroll to zoom</div>
+
+    <div id="bar" hidden>
+      <button id="play" aria-label="Pause">❚❚</button>
+      <input id="scrub" type="range" min="0" max="96" step="0.01" value="0" aria-label="Timeline" />
+      <span id="time">0:00 / 1:36</span>
+      <button id="explore" title="Explore the model freely (E)">EXPLORE</button>
+      <button id="cut" class="on" title="Toggle the ceiling" hidden>CUTAWAY</button>
+    </div>
+  </div>
+</div>
+
+<script>/*__THREE__*/</script>
+<script>/*__APP__*/</script>

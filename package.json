@@ -1,0 +1,19 @@
+{
+  "name": "serenz-a922-walkthrough",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cinematic 3D walkthrough of Serenz, Apartment A 922 (Studio)",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "preview": "node tools/build.mjs && node tools/render.mjs --preview",
+    "render": "node tools/build.mjs && node tools/render.mjs",
+    "music": "python3 tools/music.py out/ambient.wav"
+  },
+  "dependencies": {
+    "three": "0.160.0"
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
+  }
+}
