@@ -8,7 +8,11 @@
  *               explore mode.
  * ------------------------------------------------------------------------- */
 
-const IS_RENDER = new URLSearchParams(location.search).has('render');
+const PARAMS = new URLSearchParams(location.search);
+const IS_RENDER = PARAMS.has('render');
+// Multisampling is the single most expensive thing in the frame under a
+// software rasteriser; ?aa=0 drops it for draft renders.
+const USE_AA = PARAMS.get('aa') !== '0';
 
 const stage = document.getElementById('stage');
 const glCanvas = document.getElementById('gl');
@@ -17,7 +21,7 @@ const uiCtx = uiCanvas.getContext('2d');
 
 const renderer = new THREE.WebGLRenderer({
   canvas: glCanvas,
-  antialias: true,
+  antialias: USE_AA,
   powerPreference: 'high-performance',
   // Offline capture screenshots outside the rAF cycle, so the drawing buffer
   // has to survive until the compositor reads it.
@@ -25,7 +29,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setPixelRatio(1);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -81,6 +85,27 @@ function renderFrame(t) {
 }
 
 window.__renderFrame = renderFrame;
+
+/* Offline capture.
+ *
+ * Playwright's page.screenshot() costs ~3 s/frame at 1080p here — it drives
+ * the whole compositor/surface-capture path. Flattening the two canvases into
+ * one 2D canvas in-page and encoding with toDataURL does the same job for a
+ * fraction of that, and still forces the GL buffer to actually rasterise. */
+const outCanvas = document.createElement('canvas');
+const outCtx = outCanvas.getContext('2d');
+
+window.__captureFrame = (t, quality) => {
+  renderFrame(t);
+  if (outCanvas.width !== VW || outCanvas.height !== VH) {
+    outCanvas.width = VW;
+    outCanvas.height = VH;
+  }
+  outCtx.drawImage(glCanvas, 0, 0);
+  outCtx.drawImage(uiCanvas, 0, 0);
+  return outCanvas.toDataURL('image/jpeg', quality);
+};
+
 window.__validate = (step) => buildValidator(scene, camera, film)(step);
 window.__duration = film.FILM_DURATION;
 window.__shots = film.SHOTS.map((s) => ({ id: s.id, t0: s.t0, t1: s.t1, caption: s.caption }));
@@ -120,8 +145,15 @@ if (!IS_RENDER) {
   const cutBtn = document.getElementById('cut');
   const hint = document.getElementById('hint');
 
-  let playing = true;
-  let t = 0;
+  // Viewers who ask for reduced motion get the film held on its title card
+  // rather than a camera move starting under them.
+  const reduceMotion = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Open just past the fade-up so the first painted frame is the title card
+  // rather than black; the loop back to 0 plays the fade in full.
+  let playing = !reduceMotion;
+  let t = 1.4;
   let last = performance.now();
 
   scrub.max = String(film.FILM_DURATION);
@@ -211,7 +243,8 @@ if (!IS_RENDER) {
 
   window.addEventListener('resize', resize);
   resize();
-  setPlaying(true);
+  setPlaying(playing);
+  scrub.value = String(t);
   requestAnimationFrame(loop);
   bar.hidden = false;
 } else {

@@ -61,7 +61,7 @@ function skyEnvTexture() {
 const GRADE_DAY = {
   top: [0.20, 0.42, 0.78], horizon: [0.72, 0.81, 0.90], bottom: [0.47, 0.45, 0.43],
   sun: [1.00, 0.96, 0.88], sunSize: 1.0,
-  sunDir: [0.42, 0.40, 0.82], sunI: 2.5, hemiI: 0.72,
+  sunDir: [0.42, 0.40, 0.82], sunI: 2.5, hemiI: 0.86,
   hemiSky: 0xbcd4f2, hemiGround: 0x9c8a72,
   practical: 0.40, exposure: 0.88, fog: [0.78, 0.84, 0.90], fogD: 0.0016,
 };
@@ -69,9 +69,9 @@ const GRADE_DAY = {
 const GRADE_DUSK = {
   top: [0.10, 0.15, 0.36], horizon: [0.94, 0.56, 0.32], bottom: [0.22, 0.18, 0.19],
   sun: [1.00, 0.62, 0.34], sunSize: 1.5,
-  sunDir: [0.60, 0.10, 0.79], sunI: 1.2, hemiI: 0.34,
+  sunDir: [0.60, 0.10, 0.79], sunI: 1.2, hemiI: 0.30,
   hemiSky: 0x5c6a92, hemiGround: 0x4a3a30,
-  practical: 1.60, exposure: 1.00, fog: [0.42, 0.34, 0.36], fogD: 0.0030,
+  practical: 1.75, exposure: 0.94, fog: [0.42, 0.34, 0.36], fogD: 0.0030,
 };
 
 function mix3(a, b, t) {
@@ -115,7 +115,7 @@ function buildLighting(scene, renderer, M, P) {
   /* -- sun ----------------------------------------------------------------- */
   const sun = new THREE.DirectionalLight(0xffffff, 2.5);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 60;
   const s = 8;
@@ -124,23 +124,19 @@ function buildLighting(scene, renderer, M, P) {
   sun.shadow.camera.top = s;
   sun.shadow.camera.bottom = -s;
   sun.shadow.bias = -0.0006;
-  sun.shadow.normalBias = 0.022;
+  sun.shadow.normalBias = 0.035;
   sun.target.position.set(W / 2, 1.0, D_INT * 0.55);
   scene.add(sun);
   scene.add(sun.target);
 
-  const hemi = new THREE.HemisphereLight(0xbcd4f2, 0x9c8a72, 0.72);
+  const hemi = new THREE.HemisphereLight(0xbcd4f2, 0x9c8a72, 0.86);
   scene.add(hemi);
 
-  // A dim bounce from the balcony back into the room, so the deep end of the
-  // plan does not go flat black under software rendering.
-  const bounce = new THREE.DirectionalLight(0xdfe8f2, 0.35);
-  bounce.position.set(W / 2, 0.6, D_TOT);
-  bounce.target.position.set(W / 2, 1.6, 0);
-  scene.add(bounce);
-  scene.add(bounce.target);
-
-  /* -- interior practicals ------------------------------------------------- */
+  /* -- interior practicals -------------------------------------------------
+   * Every light in the scene is evaluated per fragment whether or not its
+   * intensity is zero, and under a software rasteriser the light loop is the
+   * single biggest cost in the frame. So the count is kept deliberately low
+   * and the balcony bounce is folded into the hemisphere above. */
   const practicals = [];
   const practical = (color, intensity, dist, x, y, z) => {
     const l = new THREE.PointLight(color, intensity, dist, 2.0);
@@ -152,22 +148,26 @@ function buildLighting(scene, renderer, M, P) {
   practical(0xffd9a8, 12.0, 7.0, P.chandelier.x, H - P.chandelier.drop - 0.05, P.chandelier.z);
   practical(0xffe6c4, 6.0, 4.5, W - 0.55, 2.10, 1.10);          // kitchen
   practical(0xffeed6, 5.0, 4.0, 0.95, 2.55, 1.00);              // bath
-  practical(0xffcf96, 4.5, 3.0, 0.32, 1.02, 5.75);              // bedside lamp
-  practical(0xffe8cc, 5.0, 4.5, 2.55, 2.60, 1.60);              // foyer
-  practical(0xffe8cc, 6.0, 5.5, 1.40, 2.60, 4.60);              // sleeping zone
-  practical(0xffe8cc, 5.0, 5.0, 3.00, 2.60, 7.20);              // living
   practical(0xffe0bc, 5.0, 4.5, W / 2, P.H_BAL - 0.25, D_INT + 0.85); // balcony
+  // The bedside and living lamps are carried by their emissive shades instead
+  // of costing two more light slots for the whole film.
 
   // With the ceiling lifted for the doll-house shots the room loses its
-  // bounce, so it gets a dedicated top-down fill that is off the rest of time.
-  const dollFill = new THREE.DirectionalLight(0xeef4ff, 0.0);
+  // bounce, so it gets a top-down fill — added to and removed from the scene
+  // rather than dimmed, since a zero-intensity light still costs a slot.
+  const dollFill = new THREE.DirectionalLight(0xeef4ff, 1.05);
   dollFill.position.set(W / 2, 22, D_INT * 0.5);
   dollFill.target.position.set(W / 2, 0, D_INT * 0.5);
-  scene.add(dollFill);
-  scene.add(dollFill.target);
 
-  const state = { sky, sun, hemi, bounce, practicals, dollFill, uniforms: skyUniforms };
-  state.setDollhouse = (on) => { dollFill.intensity = on ? 1.05 : 0.0; };
+  const state = { sky, sun, hemi, practicals, dollFill, uniforms: skyUniforms };
+
+  let dollOn = false;
+  state.setDollhouse = (on) => {
+    if (on === dollOn) return;
+    dollOn = on;
+    if (on) { scene.add(dollFill); scene.add(dollFill.target); }
+    else { scene.remove(dollFill); scene.remove(dollFill.target); }
+  };
 
   /* dusk: 0 = midday, 1 = golden hour */
   state.setDusk = (t) => {
@@ -198,7 +198,6 @@ function buildLighting(scene, renderer, M, P) {
     hemi.intensity = mix1(A.hemiI, B.hemiI, t);
     hemi.color.setHex(t < 0.5 ? A.hemiSky : B.hemiSky);
     hemi.groundColor.setHex(t < 0.5 ? A.hemiGround : B.hemiGround);
-    bounce.intensity = mix1(0.35, 0.16, t);
 
     const p = mix1(A.practical, B.practical, t);
     for (const q of practicals) q.light.intensity = q.base * p;

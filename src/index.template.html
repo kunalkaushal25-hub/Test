@@ -61,7 +61,8 @@
     border: 1px solid var(--edge);
     border-radius: 999px;
     backdrop-filter: blur(14px);
-    opacity: 0;
+    /* Always present: a hover-gated transport is simply absent on touch. */
+    opacity: 0.62;
     transition: opacity 0.28s ease;
     z-index: 5;
   }
@@ -85,6 +86,16 @@
   }
   button:hover { background: rgba(255, 255, 255, 0.08); }
   button.on { border-color: var(--gold); color: var(--gold); }
+
+  button:focus-visible,
+  #scrub:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #bar { transition: none; }
+  }
 
   #play {
     width: 34px;
@@ -130,6 +141,11 @@
     background: var(--gold);
     cursor: pointer;
   }
+
+  /* An ID selector's `display` beats the UA stylesheet's [hidden] rule, so
+     these have to opt back out explicitly or they leak into the render. */
+  #bar[hidden],
+  #hint[hidden] { display: none !important; }
 
   #hint {
     position: absolute;

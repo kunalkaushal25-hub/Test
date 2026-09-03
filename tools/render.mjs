@@ -36,6 +36,7 @@ const HEIGHT = Number(opt('height', 1080));
 const FPS = Number(opt('fps', 30));
 const QUALITY = Number(opt('quality', 95));
 const OUT = opt('out', p('out/serenz-a922-studio-walkthrough.mp4'));
+const NO_AA = flag('no-aa');
 
 /* -- dependency resolution ------------------------------------------------- */
 function resolvePlaywright() {
@@ -84,12 +85,21 @@ function serve(dir) {
 const write = (stream, buf) =>
   stream.write(buf) ? Promise.resolve() : new Promise((r) => stream.once('drain', r));
 
+/* Grab one composited frame as a JPEG buffer, in-page (see app.js). */
+async function capture(page, t, quality) {
+  const url = await page.evaluate(
+    ([tt, q]) => window.__captureFrame(tt, q), [t, quality / 100]
+  );
+  return Buffer.from(url.slice(url.indexOf(',') + 1), 'base64');
+}
+
 const clock = (s) => {
   const m = Math.floor(s / 60);
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 };
 
 async function main() {
+  const bootT0 = Date.now();
   if (!fs.existsSync(p('public/index.html'))) {
     throw new Error('public/index.html missing — run `node tools/build.mjs` first');
   }
@@ -121,7 +131,7 @@ async function main() {
   page.on('console', (m) => { if (m.type() === 'error') problems.push(m.text()); });
   page.on('pageerror', (e) => problems.push(String(e)));
 
-  await page.goto(`http://127.0.0.1:${port}/?render=1`, { waitUntil: 'load' });
+  await page.goto(`http://127.0.0.1:${port}/?render=1${NO_AA ? '&aa=0' : ''}`, { waitUntil: 'load' });
   await page.waitForFunction('window.__ready === true', null, { timeout: 120000 });
 
   if (problems.length) {
@@ -130,6 +140,7 @@ async function main() {
     process.exit(1);
   }
 
+  const startedAt = Date.now() - bootT0;
   const duration = await page.evaluate('window.__duration');
   const shots = await page.evaluate('window.__shots');
 
@@ -149,6 +160,30 @@ async function main() {
     }
     await browser.close(); srv.close();
     process.exit(issues.length ? 1 : 0);
+  }
+
+  /* ---- benchmark: isolate startup cost from per-frame cost -------------- */
+  if (flag('bench')) {
+    const n = Number(opt('bench', 30));
+    // Warm up: the first frame after a light-count change recompiles every
+    // shader, which is very slow under SwiftShader and would skew the mean.
+    await capture(page, 41, QUALITY);
+
+    let inPage = 0;
+    const t0 = Date.now();
+    for (let i = 0; i < n; i++) {
+      const a = Date.now();
+      await capture(page, 41 + i / 30, QUALITY);
+      inPage += Date.now() - a;
+    }
+    const per = (Date.now() - t0) / n;
+    console.log(`  render+capture ${(inPage / n).toFixed(0)} ms/frame`);
+    const full = Math.round(duration * FPS) * per / 60000;
+    console.log(`startup ${(startedAt / 1000).toFixed(1)}s`);
+    console.log(`${per.toFixed(0)} ms/frame at ${WIDTH}x${HEIGHT}`);
+    console.log(`full film (${Math.round(duration * FPS)} frames) ~ ${full.toFixed(0)} min`);
+    await browser.close(); srv.close();
+    return;
   }
 
   /* ---- a single still, for checking one moment quickly ------------------ */
@@ -222,8 +257,7 @@ async function main() {
   const t0 = Date.now();
   for (let i = 0; i < total; i++) {
     const t = start + i / FPS;
-    await page.evaluate((tt) => window.__renderFrame(tt), t);
-    const buf = await page.screenshot({ type: 'jpeg', quality: QUALITY });
+    const buf = await capture(page, t, QUALITY);
     await write(ff.stdin, buf);
 
     if (i % 60 === 0 || i === total - 1) {

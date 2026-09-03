@@ -211,10 +211,14 @@ function buildMaterials() {
       transparent: true, opacity: 0.94, side: THREE.DoubleSide,
     }),
 
-    glass: new THREE.MeshPhysicalMaterial({
-      color: 0xdff0f4, roughness: 0.02, metalness: 0.0,
-      transmission: 0.94, thickness: 0.01, transparent: true, opacity: 0.32,
-      side: THREE.DoubleSide,
+    // Deliberately NOT MeshPhysicalMaterial+transmission: that forces three.js
+    // to re-render the whole scene into a transmission target every frame,
+    // which costs more than everything else in the scene combined under a
+    // software rasteriser. Env-mapped transparency is indistinguishable here.
+    glass: new THREE.MeshStandardMaterial({
+      color: 0xdaeaf2, roughness: 0.04, metalness: 0.06,
+      transparent: true, opacity: 0.15, side: THREE.DoubleSide,
+      envMapIntensity: 0.75,
     }),
     mirror: new THREE.MeshStandardMaterial({
       color: 0xcfd8dd, roughness: 0.04, metalness: 1.0,
