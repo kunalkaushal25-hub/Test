@@ -11,7 +11,7 @@ materials and the audio bed are all generated from code.
 
 | | |
 |---|---|
-| Film | `out/serenz-a922-studio-walkthrough.mp4` — 1920×1080, 30 fps, H.264, AAC |
+| Film | `out/serenz-a922-studio-walkthrough.mp4` — 1280×720, 30 fps, H.264, AAC |
 | Interactive | `public/index.html` — one self-contained file, plays the same film and lets you explore the model freely |
 
 Both are built from the same source, so what you watch and what you steer can't drift apart.
@@ -22,7 +22,7 @@ Both are built from the same source, so what you watch and what you steer can't 
 npm install
 npm run build                       # -> public/index.html
 python3 tools/music.py out/ambient.wav 99   # ambient bed (optional; muxed if present)
-npm run render                      # -> out/serenz-a922-studio-walkthrough.mp4
+node tools/render.mjs --width 1280 --height 720
 ```
 
 Other useful commands:
@@ -31,7 +31,8 @@ Other useful commands:
 node tools/render.mjs --check       # camera sanity check across the whole timeline
 node tools/render.mjs --preview     # a still at the middle of every shot
 node tools/render.mjs --at 38.1     # one still at a given film time
-node tools/render.mjs --width 1280 --height 720 --fps 24   # faster draft
+node tools/render.mjs --bench 20    # ms/frame at the current settings
+node tools/render.mjs --no-aa       # drop multisampling for a draft
 ```
 
 ## The model
@@ -101,11 +102,37 @@ through the entry door, the slider, and the 1.9 m bathroom — where a tight fra
 
 ## Rendering notes
 
-There's no GPU here; Chromium runs WebGL through ANGLE's SwiftShader software rasteriser at
-roughly 430 ms/frame at 1080p, so the full film takes about 21 minutes. `--width 1280 --height 720`
-roughly halves that for drafts.
+There's no GPU here: Chromium runs WebGL through ANGLE's SwiftShader software rasteriser on four
+cores, so the render is fill-rate bound and every pixel is expensive.
 
-The bundled Playwright ffmpeg is stripped to VP8/WebM only, so the build uses
+Measuring with `--bench` split the per-frame cost in a lopsided way:
+
+| | ms/frame at 1080p |
+|---|---|
+| WebGL render | 5 |
+| `page.screenshot()` | 2947 |
+
+Playwright's screenshot drives the whole compositor and surface-capture path. Flattening the GL
+and overlay canvases into one 2D canvas in-page and encoding with `toDataURL` does the same job
+for a fraction of that, and still forces the buffer to rasterise — the capture is now inside
+`window.__captureFrame()` in `src/app.js`.
+
+What remained was genuine shading cost, and three things dominated it:
+
+- **`transmission` on the glass.** three.js re-renders the entire scene into a transmission target
+  every frame for it. Env-mapped transparency is indistinguishable at this scale and costs nothing.
+- **Light count.** Every light is evaluated per fragment whether or not its intensity is zero, so
+  dimming a light to zero saves nothing. Nine slots went to six: the doll-house fill is added to
+  and removed from the scene rather than dimmed, and the balcony bounce is folded into the
+  hemisphere light.
+- **Shadow filtering.** `PCFSoftShadowMap` takes many more taps per fragment than `PCFShadowMap`.
+
+Multisampling, by contrast, turned out to cost only ~7% — so it stays on.
+
+After that the film renders at roughly 0.6 s/frame at 720p, about half an hour for the whole
+thing. 1080p is about 2.2 s/frame, or two hours, which is why the delivered film is 720p.
+
+The ffmpeg bundled with Playwright is stripped to VP8/WebM only, so the build uses
 `@ffmpeg-installer/ffmpeg` from npm for libx264 and the MP4 muxer.
 
 ## Caveats
