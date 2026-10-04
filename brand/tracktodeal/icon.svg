@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="512" height="512" role="img" aria-label="TrackToDeal">
   <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14366B"/><stop offset="1" stop-color="#0A1F44"/></linearGradient></defs>
   <rect width="128" height="128" rx="30" fill="url(#bg)"/>
-  <path d="M58 72 C 70 72, 74 56, 82 48" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="6" stroke-linecap="round" stroke-dasharray="0.1 11"/>
-  <path d="M24 100 C 44 100, 42 72, 58 72" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="24" cy="100" r="9" fill="#0A1F44" stroke="#FFFFFF" stroke-width="5"/>
-  <circle cx="58" cy="72" r="8" fill="#FFFFFF"/>
-  <circle cx="97" cy="33" r="18" fill="#22C55E"/>
-  <path d="M88.5 33.5 L94.5 39.5 L105.5 27.5" fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 44 L40 64 L22 84" fill="none" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46 44 L64 64 L46 84" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="93" cy="64" r="21" fill="#22C55E"/>
+  <path d="M83.5 64.5 L90.5 71.5 L103 57.5" fill="none" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
