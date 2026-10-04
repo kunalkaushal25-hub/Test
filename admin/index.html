@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Console</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◆</span>
+      <div>
+        <h1>Admin Console</h1>
+        <p class="subtitle" id="org-name"></p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn ghost" id="btn-export" type="button">Export JSON</button>
+      <label class="btn ghost" for="file-import">Import JSON</label>
+      <input id="file-import" type="file" accept="application/json,.json" hidden>
+      <button class="btn ghost danger" id="btn-reset" type="button">Reset demo data</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" class="tab" data-tab="users" aria-selected="true">Users <span class="count" id="count-users"></span></button>
+    <button role="tab" class="tab" data-tab="units" aria-selected="false">Org hierarchy <span class="count" id="count-units"></span></button>
+    <button role="tab" class="tab" data-tab="chart" aria-selected="false">Reporting chart</button>
+  </nav>
+
+  <main>
+    <section class="panel" id="panel-users" role="tabpanel">
+      <div class="toolbar">
+        <input type="search" id="user-search" placeholder="Search name, email or title…" aria-label="Search users">
+        <select id="user-unit-filter" aria-label="Filter by unit"></select>
+        <select id="user-role-filter" aria-label="Filter by role"></select>
+        <span class="spacer"></span>
+        <button class="btn primary" id="btn-new-user" type="button">+ New user</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Name</th><th>Role</th><th>Org unit</th><th>Reports to</th><th>Status</th><th class="actions-col"><span class="sr-only">Actions</span></th></tr>
+          </thead>
+          <tbody id="user-rows"></tbody>
+        </table>
+        <p class="empty" id="user-empty" hidden>No users match these filters.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-units" role="tabpanel" hidden>
+      <div class="toolbar">
+        <p class="hint">Build your structure: Company → Division → Department → Team. Deleting a unit moves its sub-units and members up one level.</p>
+        <span class="spacer"></span>
+        <button class="btn primary" id="btn-new-unit" type="button">+ New unit</button>
+      </div>
+      <ul class="tree" id="unit-tree"></ul>
+    </section>
+
+    <section class="panel" id="panel-chart" role="tabpanel" hidden>
+      <div class="toolbar">
+        <p class="hint">Who reports to whom. Set a user's manager from the Users tab.</p>
+      </div>
+      <div class="chart-wrap"><div class="chart" id="report-chart"></div></div>
+    </section>
+  </main>
+
+  <dialog id="user-dialog" class="dialog">
+    <form method="dialog" id="user-form" novalidate>
+      <h2 id="user-dialog-title">New user</h2>
+      <div class="grid">
+        <label>Full name<input name="name" autocomplete="off" required><small class="err" data-for="name"></small></label>
+        <label>Email<input name="email" type="email" autocomplete="off" required><small class="err" data-for="email"></small></label>
+        <label>Job title<input name="title" autocomplete="off"><small class="err" data-for="title"></small></label>
+        <label>Role<select name="role"></select><small class="err" data-for="role"></small></label>
+        <label>Org unit<select name="unitId"></select><small class="err" data-for="unitId"></small></label>
+        <label>Reports to<select name="managerId"></select><small class="err" data-for="managerId"></small></label>
+        <label>Status<select name="status"></select><small class="err" data-for="status"></small></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel" formnovalidate type="button" data-close>Cancel</button>
+        <button class="btn primary" type="submit">Save user</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="unit-dialog" class="dialog">
+    <form method="dialog" id="unit-form" novalidate>
+      <h2 id="unit-dialog-title">New unit</h2>
+      <div class="grid">
+        <label>Unit name<input name="name" autocomplete="off" required><small class="err" data-for="name"></small></label>
+        <label>Type<select name="type"></select><small class="err" data-for="type"></small></label>
+        <label>Parent unit<select name="parentId"></select><small class="err" data-for="parentId"></small></label>
+        <label>Unit head<select name="headId"></select><small class="err" data-for="headId"></small></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn" type="button" data-close>Cancel</button>
+        <button class="btn primary" type="submit">Save unit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -8,7 +8,9 @@
     "build": "node tools/build.mjs",
     "preview": "node tools/build.mjs && node tools/render.mjs --preview",
     "render": "node tools/build.mjs && node tools/render.mjs",
-    "music": "python3 tools/music.py out/ambient.wav"
+    "music": "python3 tools/music.py out/ambient.wav",
+    "admin": "python3 -m http.server 8080 -d admin",
+    "test:admin": "node --test admin/store.test.js"
   },
   "dependencies": {
     "three": "0.160.0"
