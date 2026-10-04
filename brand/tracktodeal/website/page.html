@@ -1,0 +1,590 @@
+<title>TrackToDeal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: stacked three-line type echoes the logo; a live pipeline board is the hero; the page then follows one deal from lead to Oqood. */
+:root {
+  --bg: #F5F5FA;
+  --surface: #FFFFFF;
+  --surface-2: #EEEEF7;
+  --ink: #1E1B4B;
+  --muted: #5D5B7D;
+  --line: #E1E0EE;
+  --brand: #6366F1;
+  --brand-soft: #E7E7FD;
+  --accent: #0E9F6E;
+  --accent-bright: #10B981;
+  --accent-soft: #DDF5EA;
+  --warn: #B45309;
+  --warn-soft: #FDF0DC;
+  --band: #1E1B4B;
+  --band-ink: #F3F2FF;
+  --band-muted: #B9B7E3;
+  --shadow: 0 1px 2px rgba(30, 27, 75, .06), 0 8px 24px rgba(30, 27, 75, .07);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --wrap: 1180px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #100F26; --surface: #19173A; --surface-2: #221F4A; --ink: #EFEEFF; --muted: #A9A7CF;
+    --line: #2E2B5C; --brand: #8F92FA; --brand-soft: #2A2867; --accent: #34D399; --accent-bright: #34D399;
+    --accent-soft: #123B33; --warn: #FBBF24; --warn-soft: #3A2C12; --band: #19173A; --band-ink: #F3F2FF;
+    --band-muted: #B9B7E3; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #100F26; --surface: #19173A; --surface-2: #221F4A; --ink: #EFEEFF; --muted: #A9A7CF;
+  --line: #2E2B5C; --brand: #8F92FA; --brand-soft: #2A2867; --accent: #34D399; --accent-bright: #34D399;
+  --accent-soft: #123B33; --warn: #FBBF24; --warn-soft: #3A2C12; --band: #19173A; --band-ink: #F3F2FF;
+  --band-muted: #B9B7E3; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--f-body); padding-inline: 20px; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: var(--wrap); margin-inline: auto; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h2 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.05; font-weight: 800; }
+h3 { font-size: 19px; font-weight: 700; line-height: 1.25; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 18px; max-width: 60ch; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--brand); }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* logo */
+.logo { display: block; height: 100%; width: auto; }
+.lg-ink { fill: var(--ink); } .lg-mid { fill: var(--brand); } .lg-acc { fill: var(--accent-bright); }
+.on-band .lg-ink { fill: var(--band-ink); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 600 15px/1 var(--f-body); padding: 13px 20px; border-radius: 12px; border: 1.5px solid transparent; cursor: pointer; text-decoration: none; transition: transform .15s ease, background .15s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-accent { background: var(--accent-bright); color: #062A1E; }
+.btn-ghost { border-color: var(--line); color: var(--ink); background: var(--surface); }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -20px; padding: 10px 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 28px; }
+.nav .brand { height: 46px; display: block; }
+.nav ul { display: flex; gap: 24px; list-style: none; margin: 0; padding: 0; font-weight: 500; font-size: 15px; color: var(--muted); }
+.nav ul a { text-decoration: none; } .nav ul a:hover { color: var(--ink); }
+.nav .actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.nav .signin { font-weight: 600; font-size: 15px; text-decoration: none; padding: 8px 10px; }
+@media (max-width: 860px) { .nav ul, .nav .signin { display: none; } .nav .btn { padding: 11px 14px; font-size: 14px; } }
+
+/* hero */
+.hero { padding-block: 64px 28px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 40px; align-items: end; }
+.hero h1 { font-size: clamp(48px, 8.2vw, 104px); line-height: .9; font-weight: 800; letter-spacing: -0.045em; }
+.hero h1 span { display: block; }
+.hero h1 .l2 { color: var(--brand); font-weight: 700; }
+.hero h1 .l3 { color: var(--accent); }
+.hero h1 .dot { color: var(--ink); display: inline; }
+.hero-side { display: grid; gap: 22px; padding-bottom: 8px; }
+.hero-side .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-side small { color: var(--muted); font-size: 14px; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-block: 40px 20px; gap: 24px; } }
+
+/* board */
+.board-shell { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+.board-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.board-top h3 { font-size: 16px; }
+.pill { font: 500 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.board-top .total { margin-left: auto; font-size: 14px; color: var(--muted); }
+.board-top .total b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; }
+.board-scroll { overflow-x: auto; }
+.board { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 12px; padding: 16px; min-width: 1060px; }
+.col { background: var(--surface-2); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 300px; transition: outline-color .15s; outline: 2px dashed transparent; outline-offset: -2px; }
+.col.over { outline-color: var(--brand); }
+.col-head { display: flex; align-items: baseline; gap: 8px; padding: 4px 4px 6px; }
+.col-head h4 { margin: 0; font: 600 14px/1.2 var(--f-body); }
+.col-head .count { font: 500 12px var(--f-mono); color: var(--muted); }
+.col-head .sum { margin-left: auto; font: 500 12px var(--f-mono); color: var(--muted); }
+.col[data-stage="4"] { background: var(--accent-soft); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; display: grid; gap: 7px; cursor: grab; transition: transform .15s ease, box-shadow .15s ease; }
+.card:hover { box-shadow: var(--shadow); }
+.card.dragging { opacity: .45; }
+.card .unit { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.card .meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.card .avatar { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 10px var(--f-body); background: var(--brand-soft); color: var(--brand); flex: none; }
+.card .row { display: flex; align-items: center; gap: 8px; }
+.card .val { font: 500 13px var(--f-mono); white-space: nowrap; }
+.card .age { font: 500 11px var(--f-mono); padding: 3px 6px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+.card .age.stale { background: var(--warn-soft); color: var(--warn); }
+.card .adv { margin-left: auto; flex: none; width: 30px; height: 26px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; font: 600 14px/1 var(--f-body); cursor: pointer; }
+.card .adv:hover { border-color: var(--brand); color: var(--brand); }
+.card.won { border-color: var(--accent); }
+.card.won .adv { display: none; }
+.card .won-tag { display: none; margin-left: auto; font: 600 12px var(--f-body); color: var(--accent); }
+.card.won .won-tag { display: inline-flex; align-items: center; gap: 4px; }
+.card.pop { animation: pop .4s ease; }
+@keyframes pop { 0% { transform: scale(.96); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+.board-hint { padding: 0 18px 14px; font-size: 13px; color: var(--muted); }
+
+/* toast */
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; pointer-events: none; transition: all .25s ease; z-index: 40; max-width: calc(100% - 40px); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* sections */
+section.block { padding-block: 88px 0; }
+.head { display: grid; gap: 14px; margin-bottom: 36px; }
+@media (max-width: 700px) { section.block { padding-block: 64px 0; } }
+
+/* journey */
+.journey { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; counter-reset: s; }
+.journey li { position: relative; padding: 46px 18px 0 0; display: grid; gap: 6px; align-content: start; }
+.journey li::before { counter-increment: s; content: counter(s); position: absolute; top: 0; left: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 500 13px var(--f-mono); background: var(--surface); border: 2px solid var(--brand); color: var(--brand); z-index: 1; }
+.journey li::after { content: ""; position: absolute; top: 14px; left: 30px; right: 0; height: 2px; background: var(--line); }
+.journey li:last-child::before { background: var(--accent-bright); border-color: var(--accent-bright); color: #062A1E; content: "\2713"; font-family: var(--f-body); font-weight: 700; }
+.journey li:last-child::after { display: none; }
+.journey b { font-family: var(--f-display); font-size: 18px; font-weight: 700; }
+.journey span { color: var(--muted); font-size: 14px; }
+@media (max-width: 900px) {
+  .journey { grid-template-columns: 1fr; gap: 0; }
+  .journey li { padding: 0 0 26px 50px; }
+  .journey li::after { top: 30px; bottom: 0; left: 14px; right: auto; width: 2px; height: auto; }
+}
+
+/* features */
+.features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.feature { background: var(--surface); padding: 28px; display: grid; gap: 10px; align-content: start; }
+.feature .tag { font: 500 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+.feature p { color: var(--muted); font-size: 15px; }
+@media (max-width: 900px) { .features { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+
+/* deal record */
+.split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 48px; align-items: center; }
+.checks { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; }
+.checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); }
+.checks li::before { content: "\2713"; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 2px; }
+.checks b { color: var(--ink); font-weight: 600; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; gap: 32px; } }
+
+.record { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 24px; display: grid; gap: 20px; }
+.rec-head { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.rec-head h3 { font-size: 22px; }
+.rec-head p { color: var(--muted); font-size: 14px; }
+.status { margin-left: auto; font: 600 12px var(--f-body); padding: 6px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); }
+.stages { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.stages div { display: grid; gap: 6px; font-size: 11px; color: var(--muted); }
+.stages div::before { content: ""; height: 6px; border-radius: 3px; background: var(--line); }
+.stages .done::before { background: var(--brand); }
+.stages .now { color: var(--ink); font-weight: 600; }
+.stages .now::before { background: linear-gradient(90deg, var(--brand) 55%, var(--line) 55%); }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.facts div { background: var(--surface-2); border-radius: 12px; padding: 12px; display: grid; gap: 2px; min-width: 0; }
+.facts span { font-size: 12px; color: var(--muted); }
+.facts b { font: 500 15px var(--f-mono); overflow-wrap: anywhere; }
+.plan h4 { margin: 0 0 8px; font: 600 14px var(--f-body); display: flex; justify-content: space-between; gap: 8px; }
+.plan h4 span { color: var(--muted); font-weight: 400; }
+.planbar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 3px; }
+.planbar i { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.next { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 14px; border: 1.5px dashed var(--brand); flex-wrap: wrap; }
+.next small { display: block; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--brand); }
+.next b { font-weight: 600; }
+.next .btn { margin-left: auto; padding: 9px 14px; font-size: 14px; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 14px; }
+.log li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; color: var(--muted); }
+.log time { font: 500 12px var(--f-mono); padding-top: 2px; }
+.log b { color: var(--ink); font-weight: 600; }
+@media (max-width: 520px) { .facts { grid-template-columns: 1fr 1fr; } .stages div { font-size: 0; } }
+
+/* reports */
+.reports { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: grid; gap: 16px; min-width: 0; }
+.panel-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.panel-head h3 { font-size: 17px; }
+.panel-head .pill { margin-left: auto; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font: 500 11px var(--f-mono); fill: var(--muted); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .bar { fill: var(--brand); opacity: .35; }
+.chart .bar.last { fill: var(--accent-bright); opacity: 1; }
+.chart .val { fill: var(--ink); }
+.kpis { display: grid; gap: 12px; }
+.kpi { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.kpi:last-child { border-bottom: 0; padding-bottom: 0; }
+.kpi span { font-size: 13px; color: var(--muted); }
+.kpi b { font: 700 28px/1.1 var(--f-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi em { font-style: normal; font: 500 12px var(--f-mono); color: var(--accent); }
+.funnel { display: grid; gap: 8px; }
+.funnel div { display: grid; grid-template-columns: 96px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); }
+.funnel i { display: block; height: 10px; border-radius: 5px; background: var(--brand); }
+.funnel div:last-child i { background: var(--accent-bright); }
+.funnel b { font: 500 12px var(--f-mono); color: var(--ink); text-align: right; }
+@media (max-width: 900px) { .reports { grid-template-columns: 1fr; } }
+
+/* pricing */
+.prices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+.price { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+.price.featured { border: 2px solid var(--ink); position: relative; }
+.price.featured::before { content: "Most teams pick this"; position: absolute; top: -12px; left: 24px; background: var(--ink); color: var(--bg); font: 600 12px var(--f-body); padding: 5px 10px; border-radius: 999px; }
+.price .amt { font: 800 40px/1 var(--f-display); letter-spacing: -0.03em; }
+.price .amt small { font: 500 14px var(--f-body); color: var(--muted); letter-spacing: 0; }
+.price p { color: var(--muted); font-size: 15px; }
+.price ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; font-size: 15px; flex: 1; }
+.price li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; }
+.price li::before { content: "\2713"; color: var(--accent); font-weight: 700; }
+.price .btn { justify-content: center; }
+@media (max-width: 900px) { .prices { grid-template-columns: 1fr; max-width: 520px; } }
+
+/* cta band */
+.band { margin-top: 96px; background: var(--band); color: var(--band-ink); border-radius: 28px; padding: clamp(28px, 5vw, 56px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.band h2 { font-size: clamp(38px, 6vw, 72px); line-height: .92; letter-spacing: -0.04em; }
+.band h2 span { display: block; }
+.band h2 .l2 { color: #A5A8FB; font-weight: 700; }
+.band h2 .l3 { color: #34D399; }
+.band p { color: var(--band-muted); }
+.band form { display: grid; gap: 12px; }
+.band label { font-size: 13px; font-weight: 500; color: var(--band-muted); display: grid; gap: 6px; }
+.band input, .band select { font: 500 16px var(--f-body); padding: 13px 14px; border-radius: 12px; border: 1.5px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06); color: var(--band-ink); width: 100%; }
+.band select option { color: #1E1B4B; }
+.band input::placeholder { color: rgba(243, 242, 255, .45); }
+.band .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.band .note { font-size: 14px; min-height: 1.4em; color: #6EE7B7; }
+@media (max-width: 860px) { .band { grid-template-columns: 1fr; } .band .row2 { grid-template-columns: 1fr; } }
+
+/* footer */
+footer { padding-block: 56px 40px; display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: start; }
+footer .brand { height: 84px; }
+footer .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; justify-self: end; width: min(100%, 560px); }
+footer h5 { margin: 0 0 10px; font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
+footer ul a { text-decoration: none; } footer ul a:hover { color: var(--brand); }
+.legal { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+@media (max-width: 700px) { footer { grid-template-columns: 1fr; } footer .cols { justify-self: start; } }
+</style>
+
+<header class="nav">
+  <div class="wrap">
+    <a href="#top" class="brand" aria-label="TrackToDeal home"><svg class="logo" viewBox="20 16 140 160" role="img" aria-label="TrackToDeal"><g transform="translate(24 24)"><path class="lg-ink" d="M0.9765625 14.216796875V5.623046875H31.8359375V14.216796875H21.484375V42.0H11.328125V14.216796875ZM30.580078125 42.0V16.21875H40.052734375V20.90625H40.1015625Q40.8095703125 18.2939453125 42.298828125 17.25634765625Q43.7880859375 16.21875 46.44921875 16.21875H48.890625V24.03125H45.326171875Q43.03125 24.03125 41.6884765625 25.544921875Q40.345703125 27.05859375 40.345703125 29.646484375V42.0ZM57.791015625 42.4638671875Q53.9091796875 42.4638671875 51.45556640625 40.583984375Q49.001953125 38.7041015625 49.001953125 34.87109375Q49.001953125 31.990234375 50.3203125 30.24462890625Q51.638671875 28.4990234375 53.884765625 27.64453125Q56.130859375 26.7900390625 58.9140625 26.619140625Q62.33203125 26.3994140625 63.748046875 25.9111328125Q65.1640625 25.4228515625 65.1640625 24.373046875V24.275390625Q65.1640625 23.4208984375 64.37060546875 22.92041015625Q63.5771484375 22.419921875 62.234375 22.419921875Q59.2802734375 22.419921875 59.01171875 24.763671875H50.076171875Q50.3935546875 20.369140625 53.54296875 18.0009765625Q56.6923828125 15.6328125 62.625 15.6328125Q68.6064453125 15.6328125 71.71923828125 18.0009765625Q74.83203125 20.369140625 74.83203125 24.763671875V42.0H65.310546875V38.38671875H65.212890625Q63.943359375 40.681640625 62.10009765625 41.57275390625Q60.2568359375 42.4638671875 57.791015625 42.4638671875ZM60.96484375 36.384765625Q62.5517578125 36.384765625 63.90673828125 35.4814453125Q65.26171875 34.578125 65.26171875 32.869140625V30.818359375Q63.8701171875 31.306640625 61.35546875 31.74609375Q59.8662109375 31.990234375 58.99951171875 32.63720703125Q58.1328125 33.2841796875 58.1328125 34.28515625Q58.1328125 35.26171875 58.92626953125 35.8232421875Q59.7197265625 36.384765625 60.96484375 36.384765625ZM90.32421875 42.5859375Q86.1982421875 42.5859375 83.09765625 40.9013671875Q79.9970703125 39.216796875 78.27587890625 36.17724609375Q76.5546875 33.1376953125 76.5546875 29.109375Q76.5546875 25.0810546875 78.27587890625 22.04150390625Q79.9970703125 19.001953125 83.09765625 17.3173828125Q86.1982421875 15.6328125 90.32421875 15.6328125Q94.1083984375 15.6328125 97.0380859375 17.06103515625Q99.9677734375 18.4892578125 101.6767578125 21.0283203125Q103.3857421875 23.5673828125 103.5078125 26.912109375H94.181640625Q94.0595703125 25.1787109375 93.07080078125 24.18994140625Q92.08203125 23.201171875 90.51953125 23.201171875Q88.5908203125 23.201171875 87.50439453125 24.763671875Q86.41796875 26.326171875 86.41796875 29.109375Q86.41796875 31.8681640625 87.50439453125 33.44287109375Q88.5908203125 35.017578125 90.51953125 35.017578125Q92.08203125 35.017578125 93.07080078125 33.9921875Q94.0595703125 32.966796875 94.181640625 31.208984375H103.5078125Q103.5078125 34.5537109375 101.8232421875 37.1171875Q100.138671875 39.6806640625 97.17236328125 41.13330078125Q94.2060546875 42.5859375 90.32421875 42.5859375ZM105.181640625 42.0V5.623046875H114.947265625V24.6171875H115.044921875L121.587890625 16.21875H132.623046875L123.541015625 27.546875L132.916015625 42.0H121.83203125L116.36328125 33.0888671875L114.947265625 34.8466796875V42.0Z"/><path class="lg-mid" d="M19.921875 64.21875V71.640625H14.599609375V80.576171875Q14.599609375 81.7236328125 15.05126953125 82.15087890625Q15.5029296875 82.578125 16.845703125 82.578125H19.921875V90.0H14.55078125Q9.47265625 90.0 7.1533203125 88.15673828125Q4.833984375 86.3134765625 4.833984375 82.28515625V71.640625H0.48828125V64.21875H4.833984375V57.1875H14.599609375V64.21875ZM34.33984375 90.5859375Q30.1650390625 90.5859375 26.9912109375 88.93798828125Q23.8173828125 87.2900390625 22.04736328125 84.2626953125Q20.27734375 81.2353515625 20.27734375 77.109375Q20.27734375 72.9833984375 22.04736328125 69.96826171875Q23.8173828125 66.953125 26.9912109375 65.29296875Q30.1650390625 63.6328125 34.33984375 63.6328125Q38.5390625 63.6328125 41.70068359375 65.29296875Q44.8623046875 66.953125 46.63232421875 69.96826171875Q48.40234375 72.9833984375 48.40234375 77.109375Q48.40234375 81.2353515625 46.63232421875 84.2626953125Q44.8623046875 87.2900390625 41.70068359375 88.93798828125Q38.5390625 90.5859375 34.33984375 90.5859375ZM34.33984375 82.96875Q36.0732421875 82.96875 37.30615234375 81.49169921875Q38.5390625 80.0146484375 38.5390625 77.109375Q38.5390625 74.2041015625 37.30615234375 72.72705078125Q36.0732421875 71.25 34.33984375 71.25Q32.6064453125 71.25 31.37353515625 72.72705078125Q30.140625 74.2041015625 30.140625 77.109375Q30.140625 80.0146484375 31.37353515625 81.49169921875Q32.6064453125 82.96875 34.33984375 82.96875Z"/><path class="lg-acc" d="M16.162109375 138.0H1.953125V101.623046875H16.015625Q21.630859375 101.623046875 25.8056640625 103.869140625Q29.98046875 106.115234375 32.275390625 110.20458984375Q34.5703125 114.2939453125 34.5703125 119.8359375Q34.5703125 125.353515625 32.2998046875 129.4306640625Q30.029296875 133.5078125 25.9033203125 135.75390625Q21.77734375 138.0 16.162109375 138.0ZM12.109375 129.6015625H15.673828125Q20.1171875 129.6015625 22.216796875 127.19677734375Q24.31640625 124.7919921875 24.31640625 119.8359375Q24.31640625 114.8310546875 22.1435546875 112.42626953125Q19.970703125 110.021484375 15.380859375 110.021484375H12.109375ZM48.8662109375 138.5859375Q44.8623046875 138.5859375 41.76171875 136.86474609375Q38.6611328125 135.1435546875 36.91552734375 132.091796875Q35.169921875 129.0400390625 35.169921875 125.109375Q35.169921875 121.154296875 36.9033203125 118.11474609375Q38.63671875 115.0751953125 41.67626953125 113.35400390625Q44.7158203125 111.6328125 48.6708984375 111.6328125Q52.6259765625 111.6328125 55.677734375 113.3173828125Q58.7294921875 115.001953125 60.45068359375 117.98046875Q62.171875 120.958984375 62.171875 124.8408203125V127.453125H44.642578125Q44.69140625 129.50390625 45.912109375 130.6513671875Q47.1328125 131.798828125 49.2568359375 131.798828125Q50.8193359375 131.798828125 51.93017578125 131.212890625Q53.041015625 130.626953125 53.431640625 129.5771484375H62.07421875Q61.6103515625 132.2138671875 59.7548828125 134.240234375Q57.8994140625 136.2666015625 55.07958984375 137.42626953125Q52.259765625 138.5859375 48.8662109375 138.5859375ZM44.7158203125 121.984375H53.1630859375Q52.9189453125 120.3974609375 51.8203125 119.50634765625Q50.7216796875 118.615234375 48.939453125 118.615234375Q47.1572265625 118.615234375 46.05859375 119.50634765625Q44.9599609375 120.3974609375 44.7158203125 121.984375ZM72.1953125 138.4638671875Q68.3134765625 138.4638671875 65.85986328125 136.583984375Q63.40625 134.7041015625 63.40625 130.87109375Q63.40625 127.990234375 64.724609375 126.24462890625Q66.04296875 124.4990234375 68.2890625 123.64453125Q70.53515625 122.7900390625 73.318359375 122.619140625Q76.736328125 122.3994140625 78.15234375 121.9111328125Q79.568359375 121.4228515625 79.568359375 120.373046875V120.275390625Q79.568359375 119.4208984375 78.77490234375 118.92041015625Q77.9814453125 118.419921875 76.638671875 118.419921875Q73.6845703125 118.419921875 73.416015625 120.763671875H64.48046875Q64.7978515625 116.369140625 67.947265625 114.0009765625Q71.0966796875 111.6328125 77.029296875 111.6328125Q83.0107421875 111.6328125 86.12353515625 114.0009765625Q89.236328125 116.369140625 89.236328125 120.763671875V138.0H79.71484375V134.38671875H79.6171875Q78.34765625 136.681640625 76.50439453125 137.57275390625Q74.6611328125 138.4638671875 72.1953125 138.4638671875ZM75.369140625 132.384765625Q76.9560546875 132.384765625 78.31103515625 131.4814453125Q79.666015625 130.578125 79.666015625 128.869140625V126.818359375Q78.2744140625 127.306640625 75.759765625 127.74609375Q74.2705078125 127.990234375 73.40380859375 128.63720703125Q72.537109375 129.2841796875 72.537109375 130.28515625Q72.537109375 131.26171875 73.33056640625 131.8232421875Q74.1240234375 132.384765625 75.369140625 132.384765625ZM101.701171875 101.623046875V138.0H91.935546875V101.623046875Z"/><path class="lg-ink" d="M112.44140625 138.4638671875Q110.341796875 138.4638671875 108.8525390625 136.974609375Q107.36328125 135.4853515625 107.36328125 133.3857421875Q107.36328125 131.2861328125 108.8525390625 129.796875Q110.341796875 128.3076171875 112.44140625 128.3076171875Q114.541015625 128.3076171875 116.0302734375 129.796875Q117.51953125 131.2861328125 117.51953125 133.3857421875Q117.51953125 135.4853515625 116.0302734375 136.974609375Q114.541015625 138.4638671875 112.44140625 138.4638671875Z"/></g></svg></a>
+    <ul>
+      <li><a href="#pipeline">Pipeline</a></li>
+      <li><a href="#deal">Deal record</a></li>
+      <li><a href="#reports">Reports</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div class="actions">
+      <a class="signin" href="#demo">Sign in</a>
+      <a class="btn btn-primary" href="#demo">Book a demo</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <section class="hero">
+    <h1><span class="l1">Track</span><span class="l2">every lead</span><span class="l3">to the Deal<span class="dot">.</span></span></h1>
+    <div class="hero-side">
+      <p class="eyebrow">Deal tracking for property sales teams</p>
+      <p class="lede">TrackToDeal follows every buyer from first enquiry to signed SPA and Oqood registration. Your agents always know the next step, and your managers see the real pipeline in AED, not guesses.</p>
+      <div class="cta">
+        <a class="btn btn-accent" href="#demo">Book a demo</a>
+        <a class="btn btn-ghost" href="#pipeline">Try the pipeline</a>
+      </div>
+      <small>Built for off-plan and ready property sales. Set up in a day.</small>
+    </div>
+  </section>
+
+  <section id="pipeline" aria-label="Interactive pipeline demo">
+    <div class="board-shell">
+      <div class="board-top">
+        <h3>Sales pipeline · October</h3>
+        <span class="pill">Sample data</span>
+        <p class="total">Open pipeline <b id="openTotal">AED 0</b> · Closed <b id="wonTotal">AED 0</b></p>
+      </div>
+      <div class="board-scroll">
+        <div class="board" id="board"></div>
+      </div>
+      <p class="board-hint">Drag a card to another stage, or press <b>→</b> to advance it. Cards turn amber after 7 days without movement.</p>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="journey-h">
+    <div class="head">
+      <p class="eyebrow">How a deal moves</p>
+      <h2 id="journey-h">Six stages, one owner, one next step</h2>
+    </div>
+    <ol class="journey">
+      <li><b>Lead captured</b><span>Portal, WhatsApp, walk-in or broker referral. Duplicates merged.</span></li>
+      <li><b>Site visit</b><span>Visit booked and logged, with the units the buyer viewed.</span></li>
+      <li><b>EOI received</b><span>Expression of interest paid and the unit held for 72 hours.</span></li>
+      <li><b>Booking</b><span>Booking amount collected and payment plan agreed.</span></li>
+      <li><b>SPA signed</b><span>Sales and purchase agreement signed by both parties.</span></li>
+      <li><b>Oqood registered</b><span>Off-plan sale registered with the land department. Deal closed.</span></li>
+    </ol>
+  </section>
+
+  <section class="block" aria-labelledby="feat-h">
+    <div class="head">
+      <p class="eyebrow">What your team gets</p>
+      <h2 id="feat-h">Everything a property deal needs, in the order it happens</h2>
+    </div>
+    <div class="features">
+      <article class="feature"><span class="tag">Lead inbox</span><h3>Every enquiry in one place</h3><p>Portal leads, WhatsApp chats, walk-ins and broker referrals land in one inbox and are assigned to an agent within minutes.</p></article>
+      <article class="feature"><span class="tag">Inventory</span><h3>Live unit availability</h3><p>See which units are available, on hold or booked before you promise one to a buyer. Holds release automatically when they expire.</p></article>
+      <article class="feature"><span class="tag">Payments</span><h3>Payment plan tracking</h3><p>Booking amount, construction instalments and handover payment per buyer, with reminders before each due date.</p></article>
+      <article class="feature"><span class="tag">Next step</span><h3>No deal left waiting</h3><p>Each deal has one next action and one owner. Deals that sit in a stage for more than 7 days are flagged to the team lead.</p></article>
+      <article class="feature"><span class="tag">Commissions</span><h3>Broker and agent payouts</h3><p>Agency splits and agent commission calculated at booking and released when the SPA is signed.</p></article>
+      <article class="feature"><span class="tag">Reports</span><h3>Pipeline you can trust</h3><p>Pipeline value, stage conversion and agent leaderboard, updated as cards move. Export to Excel for the weekly sales meeting.</p></article>
+    </div>
+  </section>
+
+  <section class="block" id="deal" aria-labelledby="deal-h">
+    <div class="split">
+      <div>
+        <p class="eyebrow">One record per deal</p>
+        <h2 id="deal-h" style="margin-top:14px">The whole deal on one screen</h2>
+        <ul class="checks">
+          <li><span><b>Buyer, unit and agent</b> linked from the first call, so nobody re-types details at booking.</span></li>
+          <li><span><b>Payment plan progress</b> shows what is paid, what is due and what is overdue.</span></li>
+          <li><span><b>The next step</b> is always visible, with a due date and an owner.</span></li>
+          <li><span><b>A full activity log</b> of calls, visits, documents and payments for compliance.</span></li>
+        </ul>
+      </div>
+      <article class="record" aria-label="Example deal record">
+        <div class="rec-head">
+          <div>
+            <h3>Marina Crest · Unit 1204</h3>
+            <p>1 bedroom · 742 sq ft · Off-plan, handover Q4 2027</p>
+          </div>
+          <span class="status">Booking</span>
+        </div>
+        <div class="stages" aria-label="Stage progress">
+          <div class="done">Lead</div><div class="done">Visit</div><div class="done">EOI</div><div class="now">Booking</div><div>SPA</div><div>Oqood</div>
+        </div>
+        <div class="facts">
+          <div><span>Buyer</span><b>Rania Haddad</b></div>
+          <div><span>Agent</span><b>Omar S.</b></div>
+          <div><span>Price</span><b>AED 1,450,000</b></div>
+        </div>
+        <div class="plan">
+          <h4>Payment plan 10 / 30 / 60 <span class="num">AED 290,000 paid</span></h4>
+          <div class="planbar" role="img" aria-label="Payment plan: booking 10 percent paid, construction 30 percent with 10 percent paid, handover 60 percent pending">
+            <i style="flex:10;background:var(--accent-bright)"></i>
+            <i style="flex:10;background:var(--brand)"></i>
+            <i style="flex:20;background:var(--brand-soft)"></i>
+            <i style="flex:60;background:var(--surface-2)"></i>
+          </div>
+          <div class="legend">
+            <span><i style="background:var(--accent-bright)"></i>Booking 10% paid</span>
+            <span><i style="background:var(--brand)"></i>Construction 10% paid</span>
+            <span><i style="background:var(--brand-soft)"></i>20% upcoming</span>
+            <span><i style="background:var(--surface-2);outline:1px solid var(--line)"></i>Handover 60%</span>
+          </div>
+        </div>
+        <div class="next">
+          <div><small>Next step · Omar S.</small><b>Collect 2nd instalment, AED 72,500, due 14 Oct</b></div>
+          <a class="btn btn-primary" href="#demo">Send reminder</a>
+        </div>
+        <ul class="log">
+          <li><time>02 Oct</time><span><b>Instalment 1 received</b>, AED 72,500 by bank transfer</span></li>
+          <li><time>18 Sep</time><span><b>Booking confirmed</b>, payment plan signed</span></li>
+          <li><time>15 Sep</time><span><b>EOI paid</b>, unit held for 72 hours</span></li>
+          <li><time>09 Sep</time><span><b>Site visit</b> at the sales centre, viewed 1204 and 1507</span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="block" id="reports" aria-labelledby="rep-h">
+    <div class="head">
+      <p class="eyebrow">Manager view</p>
+      <h2 id="rep-h">Know your numbers before the Monday meeting</h2>
+    </div>
+    <div class="reports">
+      <div class="panel">
+        <div class="panel-head"><h3>Deals closed per month</h3><span class="pill">Sample data</span></div>
+        <svg class="chart" id="chart" viewBox="0 0 560 250" role="img" aria-label="Bar chart of deals closed per month, April to September"></svg>
+        <div class="funnel" aria-label="Stage conversion">
+          <div><span>Leads</span><i style="width:100%"></i><b>1,240</b></div>
+          <div><span>Site visits</span><i style="width:34%"></i><b>422</b></div>
+          <div><span>EOI</span><i style="width:13%"></i><b>161</b></div>
+          <div><span>SPA signed</span><i style="width:7.7%"></i><b>96</b></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>This quarter</h3></div>
+        <div class="kpis">
+          <div class="kpi"><span>Open pipeline</span><b>AED 84.6M</b><em>+12% vs last quarter</em></div>
+          <div class="kpi"><span>Lead to site visit</span><b>34%</b><em>+4 pts</em></div>
+          <div class="kpi"><span>Average days, EOI to SPA</span><b>23 days</b><em>5 days faster</em></div>
+          <div class="kpi"><span>Overdue instalments</span><b>7</b><em>All with a next step</em></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="pricing" aria-labelledby="price-h">
+    <div class="head">
+      <p class="eyebrow">Pricing</p>
+      <h2 id="price-h">Simple pricing per agent</h2>
+      <p class="lede">Billed monthly in AED. No setup fee. Cancel any time.</p>
+    </div>
+    <div class="prices">
+      <article class="price">
+        <h3>Starter</h3>
+        <p>For a small brokerage getting off spreadsheets.</p>
+        <div class="amt num">149 <small>AED / agent / month</small></div>
+        <ul><li>Up to 5 agents</li><li>Lead inbox and pipeline board</li><li>Deal records and activity log</li><li>Email support</li></ul>
+        <a class="btn btn-ghost" href="#demo">Start free trial</a>
+      </article>
+      <article class="price featured">
+        <h3>Team</h3>
+        <p>For sales teams selling off-plan launches.</p>
+        <div class="amt num">249 <small>AED / agent / month</small></div>
+        <ul><li>Unlimited agents</li><li>Unit inventory and holds</li><li>Payment plan tracking and reminders</li><li>Commissions and manager reports</li></ul>
+        <a class="btn btn-primary" href="#demo">Book a demo</a>
+      </article>
+      <article class="price">
+        <h3>Developer</h3>
+        <p>For developers with in-house and broker channels.</p>
+        <div class="amt">Custom</div>
+        <ul><li>Multiple projects and sales centres</li><li>Broker portal</li><li>Single sign-on and audit log</li><li>Dedicated onboarding</li></ul>
+        <a class="btn btn-ghost" href="#demo">Talk to sales</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="band on-band" id="demo" aria-labelledby="demo-h">
+    <div>
+      <h2 id="demo-h"><span>Put every</span><span class="l2">lead on</span><span class="l3">track.</span></h2>
+      <p style="margin-top:18px;max-width:42ch">A 30-minute walkthrough with your own projects and units loaded in.</p>
+    </div>
+    <form id="demoForm" novalidate>
+      <label for="name">Full name<input id="name" name="name" autocomplete="name" placeholder="Your name" required></label>
+      <label for="email">Work email<input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.ae" required></label>
+      <div class="row2">
+        <label for="team">Sales team size<select id="team" name="team"><option>1 to 5 agents</option><option selected>6 to 25 agents</option><option>26 to 100 agents</option><option>More than 100</option></select></label>
+        <label for="type">You sell<select id="type" name="type"><option>Off-plan</option><option>Ready units</option><option selected>Both</option></select></label>
+      </div>
+      <button class="btn btn-accent" type="submit" style="justify-content:center">Book my demo</button>
+      <p class="note" id="formNote" role="status"></p>
+    </form>
+  </section>
+</main>
+
+<footer class="wrap">
+  <a href="#top" class="brand" aria-label="TrackToDeal home"><svg class="logo" viewBox="20 16 140 160" role="img" aria-label="TrackToDeal"><g transform="translate(24 24)"><path class="lg-ink" d="M0.9765625 14.216796875V5.623046875H31.8359375V14.216796875H21.484375V42.0H11.328125V14.216796875ZM30.580078125 42.0V16.21875H40.052734375V20.90625H40.1015625Q40.8095703125 18.2939453125 42.298828125 17.25634765625Q43.7880859375 16.21875 46.44921875 16.21875H48.890625V24.03125H45.326171875Q43.03125 24.03125 41.6884765625 25.544921875Q40.345703125 27.05859375 40.345703125 29.646484375V42.0ZM57.791015625 42.4638671875Q53.9091796875 42.4638671875 51.45556640625 40.583984375Q49.001953125 38.7041015625 49.001953125 34.87109375Q49.001953125 31.990234375 50.3203125 30.24462890625Q51.638671875 28.4990234375 53.884765625 27.64453125Q56.130859375 26.7900390625 58.9140625 26.619140625Q62.33203125 26.3994140625 63.748046875 25.9111328125Q65.1640625 25.4228515625 65.1640625 24.373046875V24.275390625Q65.1640625 23.4208984375 64.37060546875 22.92041015625Q63.5771484375 22.419921875 62.234375 22.419921875Q59.2802734375 22.419921875 59.01171875 24.763671875H50.076171875Q50.3935546875 20.369140625 53.54296875 18.0009765625Q56.6923828125 15.6328125 62.625 15.6328125Q68.6064453125 15.6328125 71.71923828125 18.0009765625Q74.83203125 20.369140625 74.83203125 24.763671875V42.0H65.310546875V38.38671875H65.212890625Q63.943359375 40.681640625 62.10009765625 41.57275390625Q60.2568359375 42.4638671875 57.791015625 42.4638671875ZM60.96484375 36.384765625Q62.5517578125 36.384765625 63.90673828125 35.4814453125Q65.26171875 34.578125 65.26171875 32.869140625V30.818359375Q63.8701171875 31.306640625 61.35546875 31.74609375Q59.8662109375 31.990234375 58.99951171875 32.63720703125Q58.1328125 33.2841796875 58.1328125 34.28515625Q58.1328125 35.26171875 58.92626953125 35.8232421875Q59.7197265625 36.384765625 60.96484375 36.384765625ZM90.32421875 42.5859375Q86.1982421875 42.5859375 83.09765625 40.9013671875Q79.9970703125 39.216796875 78.27587890625 36.17724609375Q76.5546875 33.1376953125 76.5546875 29.109375Q76.5546875 25.0810546875 78.27587890625 22.04150390625Q79.9970703125 19.001953125 83.09765625 17.3173828125Q86.1982421875 15.6328125 90.32421875 15.6328125Q94.1083984375 15.6328125 97.0380859375 17.06103515625Q99.9677734375 18.4892578125 101.6767578125 21.0283203125Q103.3857421875 23.5673828125 103.5078125 26.912109375H94.181640625Q94.0595703125 25.1787109375 93.07080078125 24.18994140625Q92.08203125 23.201171875 90.51953125 23.201171875Q88.5908203125 23.201171875 87.50439453125 24.763671875Q86.41796875 26.326171875 86.41796875 29.109375Q86.41796875 31.8681640625 87.50439453125 33.44287109375Q88.5908203125 35.017578125 90.51953125 35.017578125Q92.08203125 35.017578125 93.07080078125 33.9921875Q94.0595703125 32.966796875 94.181640625 31.208984375H103.5078125Q103.5078125 34.5537109375 101.8232421875 37.1171875Q100.138671875 39.6806640625 97.17236328125 41.13330078125Q94.2060546875 42.5859375 90.32421875 42.5859375ZM105.181640625 42.0V5.623046875H114.947265625V24.6171875H115.044921875L121.587890625 16.21875H132.623046875L123.541015625 27.546875L132.916015625 42.0H121.83203125L116.36328125 33.0888671875L114.947265625 34.8466796875V42.0Z"/><path class="lg-mid" d="M19.921875 64.21875V71.640625H14.599609375V80.576171875Q14.599609375 81.7236328125 15.05126953125 82.15087890625Q15.5029296875 82.578125 16.845703125 82.578125H19.921875V90.0H14.55078125Q9.47265625 90.0 7.1533203125 88.15673828125Q4.833984375 86.3134765625 4.833984375 82.28515625V71.640625H0.48828125V64.21875H4.833984375V57.1875H14.599609375V64.21875ZM34.33984375 90.5859375Q30.1650390625 90.5859375 26.9912109375 88.93798828125Q23.8173828125 87.2900390625 22.04736328125 84.2626953125Q20.27734375 81.2353515625 20.27734375 77.109375Q20.27734375 72.9833984375 22.04736328125 69.96826171875Q23.8173828125 66.953125 26.9912109375 65.29296875Q30.1650390625 63.6328125 34.33984375 63.6328125Q38.5390625 63.6328125 41.70068359375 65.29296875Q44.8623046875 66.953125 46.63232421875 69.96826171875Q48.40234375 72.9833984375 48.40234375 77.109375Q48.40234375 81.2353515625 46.63232421875 84.2626953125Q44.8623046875 87.2900390625 41.70068359375 88.93798828125Q38.5390625 90.5859375 34.33984375 90.5859375ZM34.33984375 82.96875Q36.0732421875 82.96875 37.30615234375 81.49169921875Q38.5390625 80.0146484375 38.5390625 77.109375Q38.5390625 74.2041015625 37.30615234375 72.72705078125Q36.0732421875 71.25 34.33984375 71.25Q32.6064453125 71.25 31.37353515625 72.72705078125Q30.140625 74.2041015625 30.140625 77.109375Q30.140625 80.0146484375 31.37353515625 81.49169921875Q32.6064453125 82.96875 34.33984375 82.96875Z"/><path class="lg-acc" d="M16.162109375 138.0H1.953125V101.623046875H16.015625Q21.630859375 101.623046875 25.8056640625 103.869140625Q29.98046875 106.115234375 32.275390625 110.20458984375Q34.5703125 114.2939453125 34.5703125 119.8359375Q34.5703125 125.353515625 32.2998046875 129.4306640625Q30.029296875 133.5078125 25.9033203125 135.75390625Q21.77734375 138.0 16.162109375 138.0ZM12.109375 129.6015625H15.673828125Q20.1171875 129.6015625 22.216796875 127.19677734375Q24.31640625 124.7919921875 24.31640625 119.8359375Q24.31640625 114.8310546875 22.1435546875 112.42626953125Q19.970703125 110.021484375 15.380859375 110.021484375H12.109375ZM48.8662109375 138.5859375Q44.8623046875 138.5859375 41.76171875 136.86474609375Q38.6611328125 135.1435546875 36.91552734375 132.091796875Q35.169921875 129.0400390625 35.169921875 125.109375Q35.169921875 121.154296875 36.9033203125 118.11474609375Q38.63671875 115.0751953125 41.67626953125 113.35400390625Q44.7158203125 111.6328125 48.6708984375 111.6328125Q52.6259765625 111.6328125 55.677734375 113.3173828125Q58.7294921875 115.001953125 60.45068359375 117.98046875Q62.171875 120.958984375 62.171875 124.8408203125V127.453125H44.642578125Q44.69140625 129.50390625 45.912109375 130.6513671875Q47.1328125 131.798828125 49.2568359375 131.798828125Q50.8193359375 131.798828125 51.93017578125 131.212890625Q53.041015625 130.626953125 53.431640625 129.5771484375H62.07421875Q61.6103515625 132.2138671875 59.7548828125 134.240234375Q57.8994140625 136.2666015625 55.07958984375 137.42626953125Q52.259765625 138.5859375 48.8662109375 138.5859375ZM44.7158203125 121.984375H53.1630859375Q52.9189453125 120.3974609375 51.8203125 119.50634765625Q50.7216796875 118.615234375 48.939453125 118.615234375Q47.1572265625 118.615234375 46.05859375 119.50634765625Q44.9599609375 120.3974609375 44.7158203125 121.984375ZM72.1953125 138.4638671875Q68.3134765625 138.4638671875 65.85986328125 136.583984375Q63.40625 134.7041015625 63.40625 130.87109375Q63.40625 127.990234375 64.724609375 126.24462890625Q66.04296875 124.4990234375 68.2890625 123.64453125Q70.53515625 122.7900390625 73.318359375 122.619140625Q76.736328125 122.3994140625 78.15234375 121.9111328125Q79.568359375 121.4228515625 79.568359375 120.373046875V120.275390625Q79.568359375 119.4208984375 78.77490234375 118.92041015625Q77.9814453125 118.419921875 76.638671875 118.419921875Q73.6845703125 118.419921875 73.416015625 120.763671875H64.48046875Q64.7978515625 116.369140625 67.947265625 114.0009765625Q71.0966796875 111.6328125 77.029296875 111.6328125Q83.0107421875 111.6328125 86.12353515625 114.0009765625Q89.236328125 116.369140625 89.236328125 120.763671875V138.0H79.71484375V134.38671875H79.6171875Q78.34765625 136.681640625 76.50439453125 137.57275390625Q74.6611328125 138.4638671875 72.1953125 138.4638671875ZM75.369140625 132.384765625Q76.9560546875 132.384765625 78.31103515625 131.4814453125Q79.666015625 130.578125 79.666015625 128.869140625V126.818359375Q78.2744140625 127.306640625 75.759765625 127.74609375Q74.2705078125 127.990234375 73.40380859375 128.63720703125Q72.537109375 129.2841796875 72.537109375 130.28515625Q72.537109375 131.26171875 73.33056640625 131.8232421875Q74.1240234375 132.384765625 75.369140625 132.384765625ZM101.701171875 101.623046875V138.0H91.935546875V101.623046875Z"/><path class="lg-ink" d="M112.44140625 138.4638671875Q110.341796875 138.4638671875 108.8525390625 136.974609375Q107.36328125 135.4853515625 107.36328125 133.3857421875Q107.36328125 131.2861328125 108.8525390625 129.796875Q110.341796875 128.3076171875 112.44140625 128.3076171875Q114.541015625 128.3076171875 116.0302734375 129.796875Q117.51953125 131.2861328125 117.51953125 133.3857421875Q117.51953125 135.4853515625 116.0302734375 136.974609375Q114.541015625 138.4638671875 112.44140625 138.4638671875Z"/></g></svg></a>
+  <div class="cols">
+    <div><h5>Product</h5><ul><li><a href="#pipeline">Pipeline</a></li><li><a href="#deal">Deal record</a></li><li><a href="#reports">Reports</a></li><li><a href="#pricing">Pricing</a></li></ul></div>
+    <div><h5>Company</h5><ul><li><a href="#top">About</a></li><li><a href="#top">Careers</a></li><li><a href="#demo">Contact</a></li></ul></div>
+    <div><h5>Resources</h5><ul><li><a href="#top">Help centre</a></li><li><a href="#top">Security</a></li><li><a href="#top">Privacy</a></li></ul></div>
+  </div>
+  <div class="legal"><span>© 2026 TrackToDeal</span><span>Every lead, tracked to the deal.</span></div>
+</footer>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+(function () {
+  var STAGES = ["New lead", "Site visit", "EOI", "Booking", "SPA signed"];
+  var deals = [
+    { id: 1, unit: "Marina Crest · 1BR · 1204", buyer: "Rania H.", agent: "OS", value: 1450000, stage: 3, days: 4 },
+    { id: 2, unit: "Palm Vista · 2BR · 803", buyer: "James W.", agent: "LK", value: 2380000, stage: 0, days: 1 },
+    { id: 3, unit: "Creek Line · Studio · 412", buyer: "Anil M.", agent: "OS", value: 690000, stage: 0, days: 9 },
+    { id: 4, unit: "Marina Crest · 2BR · 1507", buyer: "Sara K.", agent: "FA", value: 2150000, stage: 1, days: 3 },
+    { id: 5, unit: "Garden Row · 3BR TH · 22", buyer: "Mehmet D.", agent: "LK", value: 3900000, stage: 1, days: 11 },
+    { id: 6, unit: "Creek Line · 1BR · 918", buyer: "Olga P.", agent: "FA", value: 1120000, stage: 2, days: 2 },
+    { id: 7, unit: "Palm Vista · 1BR · 1102", buyer: "Faisal A.", agent: "OS", value: 1690000, stage: 2, days: 6 },
+    { id: 8, unit: "Garden Row · 4BR Villa · 7", buyer: "Chen L.", agent: "FA", value: 5450000, stage: 3, days: 8 },
+    { id: 9, unit: "Creek Line · 2BR · 1610", buyer: "Hana R.", agent: "LK", value: 1980000, stage: 4, days: 0 }
+  ];
+  var board = document.getElementById("board");
+  var toast = document.getElementById("toast");
+  var toastTimer;
+
+  function aed(n) { return "AED " + n.toLocaleString("en-US"); }
+  function short(n) { return n >= 1e6 ? "AED " + (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, "") + "M" : "AED " + Math.round(n / 1e3) + "K"; }
+  function say(msg) {
+    toast.textContent = msg; toast.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+  }
+
+  function move(id, stage) {
+    var d = deals.find(function (x) { return x.id === id; });
+    if (!d || d.stage === stage) return;
+    d.stage = stage; d.days = 0; d.fresh = true;
+    render();
+    if (stage === 4) say("Deal closed: " + d.unit + " · " + aed(d.value));
+    else say(d.buyer + " moved to " + STAGES[stage]);
+  }
+
+  function render() {
+    board.innerHTML = "";
+    var open = 0, won = 0;
+    STAGES.forEach(function (name, s) {
+      var list = deals.filter(function (d) { return d.stage === s; });
+      var sum = list.reduce(function (a, d) { return a + d.value; }, 0);
+      if (s === 4) won += sum; else open += sum;
+      var col = document.createElement("div");
+      col.className = "col"; col.dataset.stage = s;
+      col.innerHTML = '<div class="col-head"><h4>' + name + '</h4><span class="count">' + list.length + '</span><span class="sum">' + (sum ? short(sum) : "") + "</span></div>";
+      list.forEach(function (d) {
+        var c = document.createElement("article");
+        c.className = "card" + (s === 4 ? " won" : "") + (d.fresh ? " pop" : "");
+        c.draggable = true; c.dataset.id = d.id;
+        var stale = d.days > 7 && s < 4;
+        c.innerHTML =
+          '<div class="unit">' + d.unit + "</div>" +
+          '<div class="meta"><span class="avatar" aria-label="Agent">' + d.agent + "</span>" + d.buyer + "</div>" +
+          '<div class="row"><span class="val">' + aed(d.value) + "</span>" +
+          '<span class="age' + (stale ? " stale" : "") + '">' + (s === 4 ? "signed" : d.days + "d") + "</span>" +
+          '<button class="adv" type="button" aria-label="Advance ' + d.buyer + ' to ' + (STAGES[s + 1] || "") + '" title="Advance to next stage">→</button>' +
+          '<span class="won-tag">✓ Closed</span></div>';
+        c.querySelector(".adv").addEventListener("click", function () { move(d.id, s + 1); });
+        c.addEventListener("dragstart", function (e) { e.dataTransfer.setData("text/plain", d.id); c.classList.add("dragging"); });
+        c.addEventListener("dragend", function () { c.classList.remove("dragging"); });
+        col.appendChild(c);
+        d.fresh = false;
+      });
+      col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("over"); });
+      col.addEventListener("dragleave", function () { col.classList.remove("over"); });
+      col.addEventListener("drop", function (e) { e.preventDefault(); col.classList.remove("over"); move(+e.dataTransfer.getData("text/plain"), s); });
+      board.appendChild(col);
+    });
+    document.getElementById("openTotal").textContent = short(open);
+    document.getElementById("wonTotal").textContent = short(won);
+  }
+  render();
+
+  // Deals closed per month (sample data), drawn to one linear scale.
+  var months = [["Apr", 18], ["May", 22], ["Jun", 19], ["Jul", 27], ["Aug", 31], ["Sep", 36]];
+  var svg = document.getElementById("chart"), NS = "http://www.w3.org/2000/svg";
+  var L = 34, R = 548, T = 16, B = 220, MAX = 40, bw = 52;
+  function el(tag, attrs, text) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; svg.appendChild(n); return n; }
+  function y(v) { return B - (v / MAX) * (B - T); }
+  [0, 10, 20, 30, 40].forEach(function (v) {
+    el("line", { x1: L, x2: R, y1: y(v), y2: y(v), "class": "grid" });
+    el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }, v);
+  });
+  var step = (R - L) / months.length;
+  months.forEach(function (m, i) {
+    var x = L + step * i + (step - bw) / 2;
+    el("rect", { x: x, y: y(m[1]), width: bw, height: B - y(m[1]), rx: 6, "class": "bar" + (i === months.length - 1 ? " last" : "") });
+    el("text", { x: x + bw / 2, y: y(m[1]) - 7, "text-anchor": "middle", "class": "val" }, m[1]);
+    el("text", { x: x + bw / 2, y: B + 20, "text-anchor": "middle" }, m[0]);
+  });
+
+  document.getElementById("demoForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var note = document.getElementById("formNote");
+    var email = document.getElementById("email"), name = document.getElementById("name");
+    if (!name.value.trim()) { note.textContent = "Add your name so we know who to ask for."; name.focus(); return; }
+    if (!email.checkValidity() || !email.value) { note.textContent = "Enter a work email like you@company.ae."; email.focus(); return; }
+    note.textContent = "Thanks, " + name.value.trim().split(" ")[0] + ". This is a design preview, so the request was not sent.";
+  });
+})();
+</script>
