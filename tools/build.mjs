@@ -7,7 +7,8 @@
  * `export { A as B, ... }` clause into `window.THREE = { B: A, ... }`, which
  * turns it into a plain classic script.
  *
- *   node tools/build.mjs
+ *   node tools/build.mjs            the walkthrough  -> public/index.html
+ *   node tools/build.mjs avatar     the assistant    -> public/avatar.html
  * ------------------------------------------------------------------------- */
 
 import fs from 'node:fs';
@@ -17,17 +18,42 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const p = (...a) => path.join(ROOT, ...a);
 
-const SRC_ORDER = [
-  'src/scene/plan.js',
-  'src/scene/materials.js',
-  'src/scene/shell.js',
-  'src/scene/furniture.js',
-  'src/scene/lighting.js',
-  'src/camera/shots.js',
-  'src/overlay.js',
-  'src/validate.js',
-  'src/app.js',
-];
+const TARGETS = {
+  walkthrough: {
+    template: 'src/index.template.html',
+    out: 'public/index.html',
+    order: [
+      'src/scene/plan.js',
+      'src/scene/materials.js',
+      'src/scene/shell.js',
+      'src/scene/furniture.js',
+      'src/scene/lighting.js',
+      'src/camera/shots.js',
+      'src/overlay.js',
+      'src/validate.js',
+      'src/app.js',
+    ],
+  },
+  avatar: {
+    template: 'avatar/index.template.html',
+    out: 'public/avatar.html',
+    order: [
+      'avatar/src/util.js',
+      'avatar/src/geometry.js',
+      'avatar/src/rig.js',
+      'avatar/src/materials.js',
+      'avatar/src/body.js',
+      'avatar/src/head.js',
+      'avatar/src/hair.js',
+      'avatar/src/face.js',
+      'avatar/src/gestures.js',
+      'avatar/src/motion.js',
+      'avatar/src/voice.js',
+      'avatar/src/stage.js',
+      'avatar/src/app.js',
+    ],
+  },
+};
 
 function globaliseThree() {
   const file = p('node_modules/three/build/three.module.min.js');
@@ -67,17 +93,21 @@ function globaliseThree() {
   return { src, count: pairs.length };
 }
 
-function build() {
+function build(name) {
+  const target = TARGETS[name];
+  if (!target) {
+    throw new Error(`unknown target "${name}" — expected one of: ${Object.keys(TARGETS).join(', ')}`);
+  }
   const three = globaliseThree();
 
-  const app = SRC_ORDER.map((f) => {
+  const app = target.order.map((f) => {
     const body = fs.readFileSync(p(f), 'utf8');
     return `\n/* ===== ${f} ===== */\n${body}`;
   }).join('\n');
 
   const wrapped = `(function () {\n"use strict";\nconst THREE = window.THREE;\n${app}\n})();`;
 
-  let html = fs.readFileSync(p('src/index.template.html'), 'utf8');
+  let html = fs.readFileSync(p(target.template), 'utf8');
 
   // Guard against the payloads being swallowed by a stray replacement pattern.
   const inject = (tpl, token, code) => {
@@ -89,12 +119,12 @@ function build() {
   html = inject(html, '/*__APP__*/', wrapped);
 
   fs.mkdirSync(p('public'), { recursive: true });
-  fs.writeFileSync(p('public/index.html'), html);
+  fs.writeFileSync(p(target.out), html);
 
   const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
   console.log(`three:  ${three.count} exports globalised (${kb(three.src.length)})`);
-  console.log(`app:    ${SRC_ORDER.length} modules (${kb(wrapped.length)})`);
-  console.log(`wrote:  public/index.html (${kb(html.length)})`);
+  console.log(`app:    ${target.order.length} modules (${kb(wrapped.length)})`);
+  console.log(`wrote:  ${target.out} (${kb(html.length)})`);
 
   // The Artifact host only scans the first 8 KB for a <title>.
   const titleAt = html.indexOf('<title>');
@@ -103,4 +133,4 @@ function build() {
   }
 }
 
-build();
+build(process.argv[2] || 'walkthrough');

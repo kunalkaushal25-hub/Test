@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Cinematic 3D walkthrough of Serenz, Apartment A 922 (Studio)",
+  "description": "Cinematic 3D walkthrough of Serenz A 922 (Studio), and Aisha, a 3D AI assistant avatar",
   "scripts": {
     "build": "node tools/build.mjs",
     "preview": "node tools/build.mjs && node tools/render.mjs --preview",
     "render": "node tools/build.mjs && node tools/render.mjs",
-    "music": "python3 tools/music.py out/ambient.wav"
+    "music": "python3 tools/music.py out/ambient.wav",
+    "build:avatar": "node tools/build.mjs avatar",
+    "avatar:shots": "node tools/build.mjs avatar && SHEET=5 node tools/avatar-shot.mjs --gestures"
   },
   "dependencies": {
     "three": "0.160.0"

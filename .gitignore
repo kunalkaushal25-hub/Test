@@ -1,4 +1,5 @@
 node_modules/
 out/
 public/index.html
+public/avatar.html
 .DS_Store
