@@ -14,7 +14,7 @@
  * ------------------------------------------------------------------------- */
 
 const HAIR = {
-  strands: 2100,
+  strands: 2600,
   step: 0.005,
   rows: 54,
   root: [88, 58, 36],
@@ -83,7 +83,7 @@ function buildColliders(rig) {
     tmp.subVectors(p, C);
     if (tmp.z > -0.012 && tmp.y > -0.125 && tmp.y < 0.075) {
       const ey = (tmp.y + 0.028) / 0.097;
-      const half = 0.0675 * Math.sqrt(Math.max(0, 1 - ey * ey)) + off * 0.5;
+      const half = 0.0715 * Math.sqrt(Math.max(0, 1 - ey * ey)) + off * 0.5;
       if (Math.abs(tmp.x) < half) {
         const sx = tmp.x >= 0 ? 1 : -1;
         p.x = C.x + sx * half;
@@ -165,8 +165,8 @@ function growStrands(rig) {
       clumps.set(key, {
         front: rand() < front,
         phase: rand() * TAU,
-        amp: 0.009 + rand() * 0.006,
-        lambda: 0.11 + rand() * 0.025,
+        amp: 0.008 + rand() * 0.006,
+        lambda: 0.14 + rand() * 0.035,
         len: rand(),
         tint: rand(),
       });
@@ -256,6 +256,9 @@ function growStrands(rig) {
       dir.y -= 0.20 * gk;
       const shoulderBand = smooth(1.52, 1.44, p.y) * smooth(1.30, 1.38, p.y);
       dir.z += (cl.front ? 0.09 : -0.07) * shoulderBand;
+      // Below the jaw the front lengths spread over the shoulders, the way
+      // hair falls off the slope of the trapezius, leaving the lapels clear.
+      if (cl.front) dir.x += side * 0.055 * smooth(1.50, 1.45, p.y) * smooth(1.33, 1.40, p.y) * (1 - smooth(0.12, 0.16, Math.abs(p.x)));
       // Lengths fall close to the body rather than off the shoulder points.
       const onShoulder = smooth(1.47, 1.42, p.y) * smooth(1.34, 1.38, p.y) * smooth(0.09, 0.14, Math.abs(p.x));
       if (onShoulder > 0) dir.x *= 1 - 0.6 * onShoulder;
@@ -309,7 +312,7 @@ function growStrands(rig) {
     for (let k = 1; k < pts.length; k++) col.collide(pts[k], off * 0.9);
 
     const wide = sd.cl && rootRel.y > 0.05 ? 1.25 : 1;
-    strands.push({ pts, nrm, layer, cl, width: lerp(0.010, 0.007, layer) * wide * (0.8 + 0.4 * rand()), tint: rand() });
+    strands.push({ pts, nrm, layer, cl, width: lerp(0.0088, 0.0062, layer) * wide * (0.8 + 0.4 * rand()), tint: rand() });
   }
   return { strands, col };
 }

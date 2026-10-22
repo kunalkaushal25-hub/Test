@@ -79,8 +79,8 @@ function baseProfile(y, P) {
     // From the widest point down, the outline is one superellipse quadrant
     // ending at the chin; a little fullness is added back at the cheeks.
     const q = clamp((JAW_Y - y) / JAW_H, 0, 1);
-    P.rx = 0.0721 * Math.max(0, 1 - q ** 2.5) ** (1 / 2.5)
-      + 0.0016 * gauss(y + 0.035, 0.016) - 0.0030 * gauss(y + 0.088, 0.014);
+    P.rx = 0.0721 * Math.max(0, 1 - q ** 2.7) ** (1 / 2.7)
+      + 0.0022 * gauss(y + 0.035, 0.016) - 0.0034 * gauss(y + 0.090, 0.013);
     // The front of the chin rolls under towards the throat.
     const yc = -0.095;
     if (y < yc) {
@@ -291,10 +291,18 @@ function skinColourAt(x, y, front) {
   const c = srgb(...PALETTE.skin);
   const blush = srgb(...PALETTE.blush);
   const shadow = srgb(...PALETTE.shadow);
-  c.lerp(blush, 0.22 * g2(ax - 0.039, y + 0.027, 0.0165, 0.0135) * front);
-  c.lerp(blush, 0.07 * g2(x, y - F.noseY, 0.008, 0.006) * front);
-  c.lerp(blush, 0.10 * g2(x, y - (F.chinY + 0.02), 0.012, 0.010) * front);
-  c.lerp(shadow, 0.28 * g2(ax - F.eyeX - 0.003, y - F.eyeY - 0.0105, 0.0150, 0.0062) * front);
+  c.lerp(blush, 0.20 * g2(ax - 0.040, y + 0.028, 0.0170, 0.0130) * front);
+  c.lerp(blush, 0.06 * g2(x, y - F.noseY, 0.008, 0.006) * front);
+  c.lerp(blush, 0.08 * g2(x, y - (F.chinY + 0.02), 0.012, 0.010) * front);
+  c.lerp(shadow, 0.24 * g2(ax - F.eyeX - 0.003, y - F.eyeY - 0.0105, 0.0150, 0.0062) * front);
+  // Soft contour and highlight, the way make-up models a face: shade
+  // under the cheekbones, at the temples and down the sides of the nose;
+  // lift the bridge, the brow bone and the chin.
+  const contour = 0.10 * g2(ax - 0.054, y + 0.052, 0.010, 0.018) + 0.08 * g2(ax - 0.062, y - 0.02, 0.008, 0.02)
+    + 0.06 * g2(ax - 0.0085, y + 0.018, 0.0028, 0.012) + 0.05 * smooth(0.055, 0.068, ax) * smooth(-0.06, -0.1, y);
+  const lift = 0.07 * g2(x, y + 0.012, 0.003, 0.016) + 0.05 * g2(ax - 0.03, y - 0.03, 0.012, 0.006)
+    + 0.05 * g2(x, y - (F.chinY + 0.012), 0.008, 0.007) + 0.04 * g2(x, y - 0.045, 0.02, 0.02);
+  c.multiplyScalar(1 - contour * front + lift * front * 0.6);
   // The inner corner of the socket shows between the lids: make it the
   // pink of the caruncle rather than a hole.
   c.lerp(srgb(220, 140, 140), 0.55 * g2(ax - 0.0182, y - F.eyeY, 0.0030, 0.0030) * front);
@@ -562,7 +570,7 @@ function updateMouth(head, st) {
       applyMorphs(x, y, z, inf, 0.0, _mv);
       UP[k * 3] = _mv.x; UP[k * 3 + 1] = _mv.y; UP[k * 3 + 2] = _mv.z;
       if (j === 0) innerU.push(_mv.clone());
-      c.copy(lipCol).lerp(lipIn, 0.45 * (1 - v) ** 3).lerp(lipsSkin, 0.30 * v ** 6);
+      c.copy(lipCol).lerp(lipIn, 0.45 * (1 - v) ** 3).multiplyScalar(1 - 0.10 * smooth(0.75, 0.95, v)).lerp(lipsSkin, 0.25 * v ** 8);
       UPc[k * 3] = c.r; UPc[k * 3 + 1] = c.g; UPc[k * 3 + 2] = c.b;
       UPu[k * 2] = i / LIP_NX; UPu[k * 2 + 1] = v;
 
@@ -572,7 +580,7 @@ function updateMouth(head, st) {
       applyMorphs(x, y, z, inf, jawW, _mv);
       LO[k * 3] = _mv.x; LO[k * 3 + 1] = _mv.y; LO[k * 3 + 2] = _mv.z;
       if (j === 0) innerL.push(_mv.clone());
-      c.copy(lipCol).lerp(lipIn, 0.45 * (1 - v) ** 3).lerp(lipsSkin, 0.30 * v ** 6);
+      c.copy(lipCol).lerp(lipIn, 0.45 * (1 - v) ** 3).multiplyScalar(1 + 0.06 * Math.sin(Math.PI * v)).lerp(lipsSkin, 0.25 * v ** 8);
       LOc[k * 3] = c.r; LOc[k * 3 + 1] = c.g; LOc[k * 3 + 2] = c.b;
       LOu[k * 2] = i / LIP_NX; LOu[k * 2 + 1] = v;
     }
@@ -632,10 +640,10 @@ function updateMouth(head, st) {
 /* Brows: an arched, tapering strip laid on the forehead.
  * st: { up: [L, R], inner: [L, R], furrow } */
 const BROW_PATH = [
-  new THREE.Vector2(0.0104, 0.0152),
-  new THREE.Vector2(0.0235, 0.0202),
-  new THREE.Vector2(0.0392, 0.0228),
-  new THREE.Vector2(0.0548, 0.0172),
+  new THREE.Vector2(0.0108, 0.0162),
+  new THREE.Vector2(0.0235, 0.0208),
+  new THREE.Vector2(0.0392, 0.0230),
+  new THREE.Vector2(0.0545, 0.0178),
 ];
 const BROW_W = [0.0056, 0.0052, 0.0042, 0.0015];
 

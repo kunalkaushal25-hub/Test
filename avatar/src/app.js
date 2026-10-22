@@ -4,7 +4,8 @@
  *   ?user=John        who she greets (default: John)
  *   ?endpoint=URL     POST { message, history, user } -> { reply, gesture?, mood? }
  *   ?view=half        start framed portrait | half | full
- *   ?q=low            lighter hair and no shadows, for older phones
+ *   ?q=low|high       lighter hair and no shadows, or full detail; by default
+ *                     small touch devices get the lighter set
  *   ?still=1          no clock; tools/avatar-shot.mjs drives window.__still()
  *
  * window.Aisha is the integration surface: say(), gesture(), mood(), view(),
@@ -13,13 +14,15 @@
 
 const PARAMS = new URLSearchParams(location.search);
 const STILL = PARAMS.has('still');
-const LOW = PARAMS.get('q') === 'low';
+const COARSE = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+const LOW = PARAMS.get('q') === 'low'
+  || (PARAMS.get('q') !== 'high' && COARSE && (navigator.hardwareConcurrency || 4) <= 4);
 const CONFIG = {
   assistant: 'Aisha',
   user: PARAMS.get('user') || 'John',
   endpoint: PARAMS.get('endpoint') || '',
 };
-if (LOW) HAIR.strands = 950;
+if (LOW) HAIR.strands = 1200;
 
 const appEl = document.getElementById('app');
 const canvas = document.getElementById('gl');
@@ -38,7 +41,15 @@ const headerEl = document.querySelector('header');
 const dockEl = document.getElementById('dock');
 
 /* -- build ------------------------------------------------------------------ */
-const { renderer, scene, camera } = buildStage(canvas, { preserve: STILL });
+let stage;
+try {
+  stage = buildStage(canvas, { preserve: STILL });
+} catch (err) {
+  const box = document.getElementById('loading');
+  box.textContent = 'This browser can’t show 3D graphics (WebGL is off or unavailable).';
+  throw err;
+}
+const { renderer, scene, camera } = stage;
 if (LOW) renderer.shadowMap.enabled = false;
 const timings = [];
 const timed = (label, fn) => { const t = performance.now(); const r = fn(); timings.push(`${label} ${(performance.now() - t).toFixed(0)}ms`); return r; };
@@ -381,6 +392,11 @@ window.__perf = (n = 120) => {
     hair.update(1 / 60, i / 60);
   }
   return `animation step: ${((performance.now() - t0) / n).toFixed(2)} ms/frame`;
+};
+
+/* Advance the live loop by a fixed step without real time, then draw. */
+window.__run = (seconds, step = 1 / 30) => {
+  for (let t = 0; t < seconds; t += step) frame(step);
 };
 
 /* The moment a gesture is fully formed, for stills. */

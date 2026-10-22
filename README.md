@@ -1,5 +1,9 @@
 # Serenz A 922 — Cinematic 3D Studio Walkthrough
 
+> **Also in this repo: [Aisha](avatar/README.md)**, a real-time 3D AI assistant avatar with
+> lip-sync, expressions and sixteen gestures, built the same procedural way.
+> `npm run build:avatar` → `public/avatar.html`.
+
 A 99-second cinematic walkthrough of **Serenz, Apartment A 922 (Studio)**, modelled from the
 supplied floor plan and furnishing schedule, rendered to a real H.264 MP4, and playable
 interactively in the browser.

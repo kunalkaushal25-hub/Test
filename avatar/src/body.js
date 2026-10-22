@@ -211,8 +211,11 @@ function bodySkinColour(m, p, n) {
   }
   if (kind === 'arm') c.lerp(srgb(236, 172, 160), 0.18 * gauss(m.s - ARM_ELBOW, 0.03));
   if (kind === 'torso') {
-    // A touch of warmth where the neck meets the chest.
-    c.lerp(srgb(238, 182, 166), 0.10 * gauss(p.y - 1.40, 0.03));
+    // A touch of warmth where the neck meets the chest, the shade the jaw
+    // casts on the throat, and the hollows either side of the collarbones.
+    c.lerp(srgb(232, 176, 158), 0.12 * gauss(p.y - 1.40, 0.03));
+    const front = smooth(-0.01, 0.03, p.z + 0.02);
+    c.multiplyScalar(1 - 0.16 * smooth(1.44, 1.49, p.y) * front - 0.06 * gauss(p.y - 1.395, 0.012) * gauss(Math.abs(p.x) - 0.06, 0.02));
   }
   return c;
 }
@@ -459,13 +462,38 @@ function buildBlazer(rig, M) {
     mb.grid({ rows: 56, cols: 32, s1: 0.95, point: arm.point, part: { kind: 'sleeve', S }, capStart: true });
   }
 
+  // Lapel edges: where a lapel lies on the jacket it throws a thin shadow,
+  // and its fold catches the light. Precompute the outer edge per height.
+  const edgeAng = (y, side) => {
+    const q = new THREE.Vector3();
+    const th = Math.PI / 2 + side * (delta(y) + lapelWidth(y) / Math.max(0.03, rxAt(y)));
+    shell.point(shell.sAtY(y), th, q);
+    return Math.atan2(q.z + 0.005, q.x);
+  };
+  const white = new THREE.Color(1, 1, 1);
   const geo = mb.build({
     weights: (m, p) => {
       const k = m.part.kind;
       if (k === 'sleeve') return armWeights(I, m.part.S, m.s);
       return torsoWeights(I, p);
     },
+    colour: (m, p) => {
+      const k = m.part.kind;
+      const c = white.clone();
+      if (k === 'lapel') {
+        return c.multiplyScalar(1.03 - 0.10 * smooth(0.75, 1.0, m.th));
+      }
+      if (k === 'collar') return c.multiplyScalar(0.96);
+      if (k === 'shell' && p.y > B.button && p.y < 1.43 && p.z > 0) {
+        const side = p.x >= 0 ? 1 : -1;
+        const a = Math.atan2(p.z + 0.005, p.x);
+        const d = Math.abs(a - edgeAng(p.y, side));
+        c.multiplyScalar(1 - 0.32 * Math.exp(-((d / 0.035) ** 2)));
+      }
+      return c;
+    },
   });
+  M.blazer.vertexColors = true;
   const blazer = skinned(geo, M.blazer, rig, 'blazer');
 
   // Gold bar pin on her left lapel.

@@ -4,18 +4,18 @@
  * ------------------------------------------------------------------------- */
 
 const PALETTE = {
-  skin: [236, 196, 172],
-  blush: [228, 150, 136],
-  lips: [204, 116, 112],
-  lipsInner: [160, 80, 82],
+  skin: [234, 192, 164],
+  blush: [222, 146, 128],
+  lips: [200, 112, 106],
+  lipsInner: [150, 72, 72],
   shadow: [168, 118, 120],     // eyeshadow: a soft mauve
   hair: [128, 84, 50],
   hairTip: [196, 150, 98],
-  brow: [92, 62, 42],
+  brow: [118, 84, 56],
   iris: [104, 140, 158],       // grey-blue
   irisInner: [150, 140, 100],  // a warm ring round the pupil
-  top: [228, 214, 194],        // cream knit
-  blazer: [214, 193, 167],     // sand beige
+  top: [222, 206, 184],        // cream knit
+  blazer: [206, 182, 152],     // sand beige
   trousers: [206, 186, 160],   // the suit's trousers
   shoe: [216, 186, 160],       // nude
   gold: [214, 176, 110],
@@ -77,13 +77,13 @@ function eyeTexture(iris = PALETTE.iris, inner = PALETTE.irisInner) {
   return canvasTexture(512, 512, (g, W, H) => {
     // Sclera: warm white, a little pinker towards the back.
     const sg = g.createLinearGradient(0, 0, 0, H);
-    sg.addColorStop(0.0, '#f6f1ec');
-    sg.addColorStop(0.35, '#f1e7e2');
+    sg.addColorStop(0.0, '#ece4de');
+    sg.addColorStop(0.35, '#e6dad3');
     sg.addColorStop(1.0, '#d9aaa6');
     g.fillStyle = sg;
     g.fillRect(0, 0, W, H);
 
-    const irisV = 0.175 * H;   // iris edge, as a fraction of the pole-to-pole span
+    const irisV = 0.185 * H;   // iris edge, as a fraction of the pole-to-pole span
     const pupilV = 0.060 * H;
 
     // Iris base, darkening outwards to a limbal ring.
@@ -193,7 +193,7 @@ function browTexture() {
       // Hairs at the head of the brow point up; along the arch they lie flat.
       const ang = lerp(-1.25, -0.25, smooth(0.05, 0.45, u)) + (rand() - 0.5) * 0.3;
       const edge = Math.min(1, Math.min(y, H - y) / (H * 0.18));
-      g.strokeStyle = `rgba(${PALETTE.brow.join(',')},${(0.4 + rand() * 0.5) * edge})`;
+      g.strokeStyle = `rgba(${PALETTE.brow.join(',')},${(0.3 + rand() * 0.45) * edge})`;
       g.lineWidth = 1.2 + rand() * 1.2;
       g.beginPath();
       g.moveTo(x, y);

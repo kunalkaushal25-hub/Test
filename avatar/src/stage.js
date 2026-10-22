@@ -59,7 +59,7 @@ function buildStage(canvas, { antialias = true, preserve = false } = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.98;
+  renderer.toneMappingExposure = 0.9;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(0x000000, 0);
@@ -69,7 +69,7 @@ function buildStage(canvas, { antialias = true, preserve = false } = {}) {
 
   const camera = new THREE.PerspectiveCamera(28, 1, 0.05, 50);
 
-  const key = new THREE.DirectionalLight(new THREE.Color(1.0, 0.95, 0.89), 2.6);
+  const key = new THREE.DirectionalLight(new THREE.Color(1.0, 0.92, 0.82), 2.7);
   key.position.set(-1.25, 2.5, 2.2);
   key.target.position.set(0, 1.35, 0);
   key.castShadow = true;

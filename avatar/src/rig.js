@@ -38,7 +38,7 @@ function jointTable() {
   add('spine', 'hips', 0, 1.09, -0.006);
   add('chest', 'spine', 0, 1.24, -0.014);
   add('neck', 'chest', 0, 1.432, -0.03);
-  add('head', 'neck', 0, 1.535, -0.014);
+  add('head', 'neck', 0, 1.527, -0.014);
 
   for (const [S, k] of SIDES) {
     add('shoulder' + S, 'chest', 0.024 * k, 1.405, -0.022);

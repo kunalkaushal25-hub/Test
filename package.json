@@ -13,6 +13,7 @@
     "avatar:shots": "node tools/build.mjs avatar && SHEET=5 node tools/avatar-shot.mjs --gestures"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.1.0",
     "three": "0.160.0"
   },
   "devDependencies": {
